@@ -20,7 +20,7 @@ public class Admin : AManager<Admin> {
 
 	#endregion
 
-	// Creates connection between selected the TrackedPlayer obtained from the Tracking-Server with ClientOne
+	// Creates connection between the selected TrackedPlayer obtained from the Tracking-Server with ClientOne
 	// who is connected to the network
 	public void ChooseClientOne()
 	{
@@ -35,7 +35,7 @@ public class Admin : AManager<Admin> {
 		}
 
 	}
-	// Creates connection between selected the TrackedPlayer obtained from the Tracking-Server with ClientTwo
+	// Creates connection between the selected TrackedPlayer obtained from the Tracking-Server with ClientTwo
 	// who is connected to the network
 	public void ChooseClientTwo()
 	{

@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.Networking;
 
 /// <summary>
-// PlayerController is responsible updating th eplayer position and handle all the actions used by the player
+// PlayerController is responsible for updating the player position and handle all the actions used by the player
 /// </summary>
 public class PlayerController : NetworkBehaviour{
 	#region [Public fields]
@@ -61,7 +61,7 @@ public class PlayerController : NetworkBehaviour{
 
 			// allow rotation by keyboard for non android runtimes
 			if (Application.platform != RuntimePlatform.Android) {
-				//float z = inputMode.Move() * Time.deltaTime * playerSpeed;
+				//float z = inputMode.Move() * Time.deltaTime * PlayerSpeed;
 				float x = inputMode.Turn () * Time.deltaTime * 150.0f;
 				transform.Rotate (0, x, 0);
 			}
