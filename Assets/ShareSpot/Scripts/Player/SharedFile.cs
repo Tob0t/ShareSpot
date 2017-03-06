@@ -11,7 +11,7 @@ public class SharedFile : MonoBehaviour {
     {
         var hit = collision.gameObject;
 		if(hit.CompareTag("Player")){
-			hit.GetComponent<PlayerController> ().ReceiveFile ();
+			hit.GetComponent<PlayerController> ().ReceiveFile (this.gameObject);
 		}
 
         Destroy(gameObject);

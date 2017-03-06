@@ -9,13 +9,13 @@ public class TrackedPlayerNetwork : NetworkBehaviour {
 
 	#region [Public fields]
 	[SyncVar]
-	public bool HasPlayer;
-	public GameObject ControlledPlayer;
+	public bool HasPlayer; ///< Indicates if the TrackedPlayer is already connected to a device
+	public GameObject ControlledPlayer; ///< Gameobject which is controlling the player
 
 	#endregion
 
 	#region [Private fields]
-	private Transform _body;
+	private Transform _body; ///< Body of the Gameobject
 
 	#endregion
 
@@ -26,11 +26,15 @@ public class TrackedPlayerNetwork : NetworkBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if (MyNetworkManager.Instance.IsServer) {
-			NetworkServer.Spawn (gameObject);
+		if (NetworkServer.active) {
+			if (MyNetworkManager.Instance.IsServer) {
+				NetworkServer.Spawn (gameObject);
+			}
 		}
 		if (HasPlayer) {
 			gameObject.SetActive (false);
+		} else {
+			gameObject.SetActive (true);
 		}
 	}
 

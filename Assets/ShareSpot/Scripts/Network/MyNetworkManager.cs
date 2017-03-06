@@ -9,14 +9,29 @@ using UnityEngine.UI;
 public class MyNetworkManager : NetworkManager {
 
 	#region [Public fields]
-	public string ConnectionIP;
-	public int ConnectionPort = 7777;
-	public bool ClientConnected = false;
-	public Text DebugTextClient;
-	public static MyNetworkManager Instance = null;              // static instance of MyNetworkManager which allows it to be accessed by any other script.
-	public bool IsServer;
-	public bool IsClient;
-	public Text DebugTextServer;
+	public static MyNetworkManager Instance = null;	///< static instance of MyNetworkManager which allows it to be accessed by any other script.
+	public string ConnectionIP; ///< The IP-Address to connect to
+	public int ConnectionPort = 7777; ///< The Port to connect to (Standard is 7777)
+	public bool ClientConnected = false; ///< Determine if a client is already connected (Standard is false)
+	public bool IsServer;	///< Determine if the caller is a Server
+	public bool IsClient; ///< Determine if the caller is a Client
+	public Text DebugTextClient; ///< Debugging the actions of the client
+	public Text DebugTextServer; ///< Debugging the actions of the server
+
+
+	// Gameobjects for Userinterfaces Client
+	public GameObject UI_Setup;	///< Userinterface for Starting Setup Scene
+	public GameObject UI_Wait; ///< Userinterface for Waiting Setup Scene
+	public GameObject UI_Panel; ///< Userinterface Panel for Setup
+
+	// Gameobjects for Userinterfaces Client
+	public GameObject ButtonStartServer; ///< Button to start the server
+	public GameObject ButtonStopServer; ///< Button to stop the server
+
+	#endregion
+
+	#region [Private fields]
+	private UserInterfaceController userInterfaceController;
 
 	#endregion
 
@@ -42,9 +57,10 @@ public class MyNetworkManager : NetworkManager {
 	// Procedures when starting the server
 	public void StartServerHosting()
 	{
-		Admin.Instance.PlayersPanel.gameObject.SetActive (false);
 		StartServer();
 		IsServer = true;
+		ButtonStartServer.SetActive (false);
+		ButtonStopServer.SetActive (true);
 		NetworkServer.SpawnObjects();
 	}
 
@@ -52,6 +68,8 @@ public class MyNetworkManager : NetworkManager {
 	public void StopServerHosting()
 	{
 		StopServer();
+		ButtonStopServer.SetActive (false);
+		ButtonStartServer.SetActive (true);
 		NetworkServer.Reset();
 	}
 
@@ -66,6 +84,10 @@ public class MyNetworkManager : NetworkManager {
 	public override void OnStopServer()
 	{
 		base.OnStopServer();
+		// Cleanup and delete all clients
+		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
+			NetworkServer.Destroy (connectedClient);
+		}
 		DebugTextServer.text = "Server stopped";
 	}
 
@@ -73,34 +95,35 @@ public class MyNetworkManager : NetworkManager {
 	public override void OnServerConnect(NetworkConnection conn)
 	{
 		base.OnServerConnect(conn);
-		Admin.Instance.PlayersPanel.gameObject.SetActive (true);
+		// TODO: is it necessary here?
+		toggleClientPanel (conn, true);
 		DebugTextClient.text += "Client " + conn.connectionId + " connected.\n";
+
 	}
 
 	// Override function when a client disconnects
 	public override void OnServerDisconnect(NetworkConnection conn)
 	{
 		base.OnServerDisconnect(conn);
-		switch (conn.connectionId) {
-		case 1:
-			//Admin.Instance.ButtonPlayerOne.gameObject.SetActive (false);
-			break;
-		case 2:
-			//Admin.Instance.ButtonPlayerOne.gameObject.SetActive (false);
-			break;
-		default:
-			break;
-		}
-
+		toggleClientPanel (conn, false);
+		// Set the TrackedPlayer to active if the client is not connected anymore
+		Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.SetActive (true);
 		DebugTextClient.text += "Client " + conn.connectionId + " disconnected.\n";
 	}
+
+	// Toggle the Buttons in ClientPanel depending on the current connection
+	private void toggleClientPanel(NetworkConnection conn, bool toggleMode){
+		Admin.Instance.ClientButtons [conn.connectionId].gameObject.SetActive (toggleMode);
+	}
+
 	#endregion
 
 	#region Client
 	// Override function when a client connects (on client side)
 	public override void OnClientConnect(NetworkConnection conn){
 		base.OnClientConnect (conn);
-		GameObject.FindGameObjectWithTag ("UI_Setup").SetActive (false);
+		UI_Setup.SetActive (false);
+		UI_Wait.SetActive (true);
 	}
 
 	// Procedure when a Client connects to the Server
@@ -115,6 +138,8 @@ public class MyNetworkManager : NetworkManager {
 	public void ReconnectClient()
 	{
 		StopClient();
+		UI_Wait.SetActive (true);
+		userInterfaceController.PlayerObject = null;
 		StartCoroutine("Reconnect");
 	}
 
@@ -122,6 +147,16 @@ public class MyNetworkManager : NetworkManager {
 	{
 		yield return new WaitForSeconds(1f);
 		JoinServer();
+	}
+
+	// Procedure if the client is stopped
+	public override void OnStopClient(){
+		UI_Wait.SetActive (false);
+		UI_Panel.SetActive (true);
+		UI_Setup.SetActive (true);
+		// TODO Is not necessary right?
+		//userInterfaceController.PlayerObject = null;
+		base.OnStopClient ();
 	}
 
 	#endregion
