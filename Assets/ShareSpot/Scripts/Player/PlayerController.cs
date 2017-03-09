@@ -16,15 +16,13 @@ public class PlayerController : NetworkBehaviour{
 	[SyncVar]
 	public string PlayerName;
 	public GameObject ControllingPlayer;
-//	public GameObject ARCamera;
 	public GameObject FilePrefab;
 	public Transform FileSpawn;
 	public GameObject CubePrefab;
 	public GameObject CylinderPrefab;
 	public Transform ItemSpawn;
-	public int ShootingSpeed;
+	public float ShootingSpeed = 0.01f;
 	public int PlayerSpeed;
-
 
 	#endregion
 
@@ -37,7 +35,6 @@ public class PlayerController : NetworkBehaviour{
 	// Bool for initial setup
 	private bool initialSetup;
 	private GameObject PlayerUserInterface;
-
 
 	private GameObject ARCamera;
 
@@ -97,7 +94,9 @@ public class PlayerController : NetworkBehaviour{
 					ARCamera.transform.rotation = transform.rotation;
 				}
 				// update ARCamera and player position from the syncVar obtained by the trackingClient from the server
-				ARCamera.transform.position = transform.position = Position;
+				// TODO: Camera Offset (put camera as child of player!!)
+				transform.position = Position;
+				ARCamera.transform.position = transform.Find("Hand").position;
 
 				// update rotation obtained from the gyroclient of the ARCamera
 				transform.rotation = ARCamera.transform.rotation;
@@ -141,34 +140,48 @@ public class PlayerController : NetworkBehaviour{
 		}
 	}
 
-
 	// Command executed on the server for shooting a SharedFile
 	[Command]
-	public void CmdShootFile(Vector2 direction){
+	public void CmdShootFile(Vector3 force){
 		// Create the SharedFile from the file Prefab
 		var sharedFile = (GameObject)Instantiate(
 			FilePrefab,
 			FileSpawn.position,
 			FileSpawn.rotation);
 
-		// TODO: Add velocity to the file
 		//sharedFile.GetComponent<Rigidbody>().velocity = sharedFile.transform.forward * ShootingSpeed;
-		Debug.Log("Direction Vector: "+direction.ToString());
-		Debug.Log("Forward Vector: "+sharedFile.transform.forward.ToString());
-		//sharedFile.GetComponent<Rigidbody>().velocity = direction * ShootingSpeed;
-		sharedFile.GetComponent<Rigidbody>().AddForce(new Vector3(direction.x,0,direction.y));
+		Debug.Log("Force Vector: "+force.ToString());
+
+		// Transform the force in a direction first and set is as velocity
+		sharedFile.GetComponent<Rigidbody> ().velocity = transform.TransformDirection (force*ShootingSpeed);
+		//sharedFile.GetComponent<Rigidbody>().AddRelativeForce(force * ShootingSpeed);
 
 		// Spawn the file on the Clients
 		NetworkServer.Spawn(sharedFile);
 
-		// Destroy the file after 4 seconds
-		Destroy(sharedFile, 4.0f);
+		// Destroy the file after 30 seconds
+		Destroy(sharedFile, 30.0f);
 	}
 
 	// Command executed on the server for changing the name
 	[Command]
 	public void CmdChangeName(string newName){
 		PlayerName = newName;
+	}
+
+	// Command executed on the server for receiving the file
+	// TODO Show file (null)
+	[Command]
+	public void CmdReceiveFile(GameObject file, GameObject hitObject){
+		hitObject.GetComponent<PlayerController>().RpcReceiveFile (file);
+	}
+
+	// Comannd executed on the client for receiving the file
+	[ClientRpc]
+	public void RpcReceiveFile(GameObject file){
+		if (isLocalPlayer) {
+			PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowIncomingFile (file);
+		}
 	}
 
 	// Show trigger when local player receives a File

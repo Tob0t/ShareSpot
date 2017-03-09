@@ -15,9 +15,11 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 	public GameObject placeholder = null;	///< Placeholder object which acts as "available space" between the files
 	public GameObject hitObject = null;	///< GameObject which is hit during onDrag
 
-	public Color markAvailable = Color.green;	///< Color to show all available dropable objects when start dragging
-	public Color markHover = Color.yellow;	///< Color to show when an object is hovered
+	public Color markAvailable = Color.yellow;	///< Color to show all available dropable objects when start dragging
+	public Color markHover = Color.green;	///< Color to show when an object is hovered
 	public Color markDeselected = Color.black;	///< Color to show when dragging is finished
+
+	public GameObject UserInterface;
 
 
 	//public enum Slot {WEAPON, HEAD, CHEST, LEGS, FEET, INVENTORY};
@@ -140,6 +142,11 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		if (hitObject != null) {
 			// TODO: Work with hitObject
 			Debug.Log ("HitObject " + hitObject);
+			//hitObject.GetComponent<PlayerController> ().ReceiveFile (this.gameObject);
+			//hitObject.GetComponent<PlayerController> ().CmdReceiveFile(this.gameObject);
+			// Call Command on the local Player
+			UserInterface.GetComponent<UserInterfaceController> ().PlayerObject.GetComponent <PlayerController> ().CmdReceiveFile (this.gameObject, hitObject);
+			gameObject.SetActive (false);
 		}
 	}
 	

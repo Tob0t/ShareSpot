@@ -24,7 +24,7 @@ public class SwipeDetector : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 				case TouchPhase.Ended:{
 					float swipeDistVertical = (new Vector3 (0, touch.position.y, 0) - new Vector3 (0, startPos.y, 0)).magnitude;
 					if (swipeDistVertical > MinSwipeDistY) {
-						GetComponent<UserInterfaceController> ().ShootFile (touch.position-startPos);
+						//GetComponent<UserInterfaceController> ().ShootFile (touch.position-startPos);
 						float swipeValue = Mathf.Sign (touch.position.y - startPos.y);
 						if (swipeValue > 0) {	// up swipe
 							Debug.Log("Up swipe "+ swipeDistVertical);
@@ -62,7 +62,7 @@ public class SwipeDetector : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 		Debug.Log ("StartPos: "+startPosDrag.ToString());
 		Debug.Log ("StartPos: "+eventData.position.ToString());
 		#if UNITY_EDITOR_WIN
-			GetComponent<UserInterfaceController> ().ShootFile (startPosDrag - eventData.position);
+			//GetComponent<UserInterfaceController> ().ShootFile (startPosDrag - eventData.position);
 		#endif
 	}
 }
