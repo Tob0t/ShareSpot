@@ -4,7 +4,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 /// <summary>
-// This Class is extending the Toggle Button to improve the behaviour
+/// This Class is extending the Toggle Button to improve the behaviour
 /// </summary>
 public class ToggleScript : Toggle{
 

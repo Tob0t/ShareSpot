@@ -1,11 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Networking;
 
 /// <summary>
 // Class for a shared file which can be "shot" to other players
 /// </summary>
-public class SharedFile : MonoBehaviour {
+public class SharedFile : NetworkBehaviour {
 
+	[SyncVar]
+	public int SourceId;
 	public string Name = "ExampleFile";
 	public string Author = "Max Mustermann";
 	public int size = 100;

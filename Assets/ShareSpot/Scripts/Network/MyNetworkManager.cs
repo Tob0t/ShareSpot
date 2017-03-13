@@ -19,14 +19,16 @@ public class MyNetworkManager : NetworkManager {
 	public Text DebugTextServer; ///< Debugging the actions of the server
 
 
+
 	// Gameobjects for Userinterfaces Client
 	public GameObject UI_Setup;	///< Userinterface for Starting Setup Scene
 	public GameObject UI_Wait; ///< Userinterface for Waiting Setup Scene
 	public GameObject UI_Panel; ///< Userinterface Panel for Setup
 
-	// Gameobjects for Userinterfaces Client
+	// Gameobjects for Userinterfaces Server
 	public GameObject ButtonStartServer; ///< Button to start the server
 	public GameObject ButtonStopServer; ///< Button to stop the server
+	public GameObject GamePanel; ///< GamePanel for controlling a Game
 
 	#endregion
 
@@ -68,6 +70,7 @@ public class MyNetworkManager : NetworkManager {
 	public void StopServerHosting()
 	{
 		StopServer();
+		GamePanel.SetActive (false);
 		ButtonStopServer.SetActive (false);
 		ButtonStartServer.SetActive (true);
 		NetworkServer.Reset();
@@ -96,6 +99,10 @@ public class MyNetworkManager : NetworkManager {
 	{
 		base.OnServerConnect(conn);
 		// TODO: is it necessary here?
+		// only add the connected client and button if there are not more than @param MaxClients
+		if (conn.connectionId <= Admin.Instance.MaxClients) {
+			Admin.Instance.AddClientButton(conn.connectionId);
+		}
 		toggleClientPanel (conn, true);
 		DebugTextClient.text += "Client " + conn.connectionId + " connected.\n";
 
@@ -104,10 +111,10 @@ public class MyNetworkManager : NetworkManager {
 	// Override function when a client disconnects
 	public override void OnServerDisconnect(NetworkConnection conn)
 	{
+		// show the template of a tracked player if the client is not connected anymore
+		Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.SetActive (true);
 		base.OnServerDisconnect(conn);
 		toggleClientPanel (conn, false);
-		// Set the TrackedPlayer to active if the client is not connected anymore
-		Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.SetActive (true);
 		DebugTextClient.text += "Client " + conn.connectionId + " disconnected.\n";
 	}
 
@@ -154,6 +161,7 @@ public class MyNetworkManager : NetworkManager {
 		UI_Wait.SetActive (false);
 		UI_Panel.SetActive (true);
 		UI_Setup.SetActive (true);
+		// TODO disable everything except UI_Wait
 		// TODO Is not necessary right?
 		//userInterfaceController.PlayerObject = null;
 		base.OnStopClient ();

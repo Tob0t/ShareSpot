@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 /// <summary>
 // UserInterfaceController is responsible for all the interactions between the user and the device
@@ -13,8 +14,11 @@ public class UserInterfaceController : MonoBehaviour {
 	public GameObject UI_DragNDropCanvas;	///< DragNDrop Userinterface
 	public GameObject UI_SwipeShotCanvas;	///< SwipeShot Userinterface
 	public GameObject UI_FileIncomingCanvas;	///< Incoming File Userinterface
+	public GameObject UI_GameCanvas;	///< Game Userinterface
+	public GameObject UI_ErrorCanvas;	///< Error Userinterface
 	public GUISkin CustomGuiSkin;	///< Custom Skin for designing the Buttons
 	public string PlayerName;	///< The name of the associated player
+	public Text ChallengeDescription;	///< Text for the description of a new challenge
 
 	public GameObject IncomingFile; ///< GameObject of any incoming file
 
@@ -48,13 +52,57 @@ public class UserInterfaceController : MonoBehaviour {
 	}
 
 	// Called when the Toggle SwipeShot is selected
-	public void ToggleSwipeShot(bool newValue){
+	public void ToggleSwipeShotCanvas(bool newValue){
 		UI_SwipeShotCanvas.SetActive(newValue);
 	}
 
 	// Called when the Toggle DragNDrop is selected
 	public void ToggleFileIncomingCanvas(bool newValue){
 		UI_FileIncomingCanvas.SetActive (newValue);
+	}
+
+	public void ToggleSharingModeCanvas(bool newValue){
+		SharingMode sharingMode = (SharingMode) PlayerObject.GetComponent<PlayerController> ().SharingMode;
+		switch (sharingMode) {
+		case SharingMode.DragNDrop:
+			ToggleDragNDropCanvas (newValue);
+			break;
+		case SharingMode.SwipeShot:
+			ToggleSwipeShotCanvas (newValue);
+			break;
+		case SharingMode.TouchNChuck:
+			// TODO: Create TouchNChuck
+			//ToggleTouchNChuckCanvas (newValue);
+			Debug.Log("Toggle TouchNChuckCanvas");
+			break;
+		default:
+			break;
+		}
+	}
+		
+
+	// Called when the Toggle Game is selected
+	public void ToggleGameCanvas(bool newValue){
+		UI_GameCanvas.SetActive (newValue);
+	}
+
+	// Display a new challenge
+	public void ShowNewChallenge(string description){
+		ToggleGameCanvas (true);
+		ChallengeDescription.text = description;
+	}
+
+	// Show Error
+	public void ShowErrorCanvas(){
+		UI_ErrorCanvas.SetActive (true);
+		StartCoroutine(DisableAfterSomeTime());
+	}
+
+	// Disable the Error Canvas after 3 seconds
+	IEnumerator DisableAfterSomeTime()
+	{
+		yield return new WaitForSeconds(3f);
+		UI_ErrorCanvas.SetActive (false);
 	}
 
 	// Called once per frame

@@ -11,11 +11,10 @@ public class Admin : AManager<Admin> {
 
 	#region [Public fields]
 	public GameObject CurrentTrackedPlayer; ///< Current selected Player
-	public Button ButtonClientOne;	///< Temporarily manually created ButtonTwo
-	public Button ButtonClientTwo; ///< Temporarily manually created ButtonTwo
 	public Button[] ClientButtons; ///< Array for the buttons for all connected Clients
 	public GameObject[] ConnectedClients; ///< Array for all connected Clients
 	public GameObject ClientButtonPrefab; ///< Prefab of a Client Button for programmatically instantiation
+	public GameObject GamePanel; ///< GamePanel for controlling a Game
 
 	// Global Constants
 	public int MaxClients = 10;  ///< Maximal allowed connected clients
@@ -45,6 +44,10 @@ public class Admin : AManager<Admin> {
 			//ButtonClientOne.interactable = false;
 			ConnectedClients[connectionId].GetComponent<MeshRenderer>().material.color = Color.black;
 			ConnectedClients[connectionId].GetComponent<PlayerController> ().PlayerName = "Client "+connectionId;
+			ConnectedClients[connectionId].GetComponent<PlayerController> ().ConnectionId = connectionId;
+
+			// Show GamePanel (if its not already shown)
+			GamePanel.SetActive(true);
 		}
 
 	}

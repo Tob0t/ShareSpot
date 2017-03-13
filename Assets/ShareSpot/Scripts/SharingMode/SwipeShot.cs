@@ -37,8 +37,11 @@ public class SwipeShot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		Debug.Log ("force: "+force.ToString());	
 		force /= (Time.time - startTime);
 		UserInterface.GetComponent<UserInterfaceController>().SwipeShot(force * ForceFactor);
+		//GetComponent<SwipeShotDemo>().SwipeShot(force*ForceFactor);
 		StartCoroutine ("WaitSeconds");
 	}
+
+
 
 	// Coroutine to wait for 4 seconds
 	IEnumerator WaitSeconds(){

@@ -21,10 +21,6 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
 	public GameObject UserInterface;
 
-
-	//public enum Slot {WEAPON, HEAD, CHEST, LEGS, FEET, INVENTORY};
-	//public Slot typeOfItem = Slot.WEAPON;
-
 	// Called when user starts to drag something
 	public void OnBeginDrag(PointerEventData eventData){
 		Debug.Log ("OnBeginDrag");
@@ -140,13 +136,13 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
 		// If the object is dropped on a valid hitObject
 		if (hitObject != null) {
-			// TODO: Work with hitObject
 			Debug.Log ("HitObject " + hitObject);
-			//hitObject.GetComponent<PlayerController> ().ReceiveFile (this.gameObject);
-			//hitObject.GetComponent<PlayerController> ().CmdReceiveFile(this.gameObject);
+			// TODO: GameObject must have a network identity to be able to work with it
 			// Call Command on the local Player
-			UserInterface.GetComponent<UserInterfaceController> ().PlayerObject.GetComponent <PlayerController> ().CmdReceiveFile (this.gameObject, hitObject);
-			gameObject.SetActive (false);
+			PlayerController p = UserInterface.GetComponent<UserInterfaceController> ().PlayerObject.GetComponent <PlayerController> ();
+			p.CmdReceiveFile (this.gameObject, p.ConnectionId ,hitObject.GetComponent<PlayerController> ().ConnectionId);
+			// remove gameobject
+			//gameObject.SetActive (false);
 		}
 	}
 	
