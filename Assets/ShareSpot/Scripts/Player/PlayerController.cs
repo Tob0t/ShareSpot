@@ -254,14 +254,14 @@ public class PlayerController : NetworkBehaviour{
 		if (isLocalPlayer) {
 			if (challengeState) {
 				// TODO: move instructions to one function in UserInterfaceController and show successfull message for x seconds
-				// Disable the instruction canvas
-				PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleGameCanvas (false);
+				// Disable the instruction panel
+				PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleGamePanel (false);
 
-				// Disable the sharing mode canvas
-				PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleSharingModeCanvas(false);
+				// Disable the sharing mode panel
+				PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleSharingModePanel(false);
 			} else {
-				// Show error canvas
-				PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowErrorCanvas ();
+				// Show error panel
+				PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowErrorPanel ();
 			}
 		}
 	}
@@ -275,8 +275,8 @@ public class PlayerController : NetworkBehaviour{
 			// Display the new challenge on the clients UI
 			PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowNewChallenge (description);
 
-			// Enable the sharing mode canvas which is assigned to the client
-			PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleSharingModeCanvas(true);
+			// Enable the sharing mode panel which is assigned to the client
+			PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleSharingModePanel(true);
 		}
 	}
 

@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 public class SwipeShot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
 
-	public float ForceFactor = 0.1f;
+	public float ForceFactor = 1f;
 	public GameObject UserInterface;
 
 	public Color NormalStartColor = Color.white;

@@ -24,6 +24,8 @@ public class MyNetworkManager : NetworkManager {
 	public GameObject UI_Setup;	///< Userinterface for Starting Setup Scene
 	public GameObject UI_Wait; ///< Userinterface for Waiting Setup Scene
 	public GameObject UI_Panel; ///< Userinterface Panel for Setup
+	public GameObject UserInterfaceController; ///< Userinterface Controller for controlling the inputs
+
 
 	// Gameobjects for Userinterfaces Server
 	public GameObject ButtonStartServer; ///< Button to start the server
@@ -33,7 +35,6 @@ public class MyNetworkManager : NetworkManager {
 	#endregion
 
 	#region [Private fields]
-	private UserInterfaceController userInterfaceController;
 
 	#endregion
 
@@ -145,8 +146,9 @@ public class MyNetworkManager : NetworkManager {
 	public void ReconnectClient()
 	{
 		StopClient();
+		UserInterfaceController.GetComponent<UserInterfaceController>().DisableAllGamePanels ();
 		UI_Wait.SetActive (true);
-		userInterfaceController.PlayerObject = null;
+		UserInterfaceController.GetComponent<UserInterfaceController>().PlayerObject = null;
 		StartCoroutine("Reconnect");
 	}
 
@@ -158,10 +160,10 @@ public class MyNetworkManager : NetworkManager {
 
 	// Procedure if the client is stopped
 	public override void OnStopClient(){
+		UserInterfaceController.GetComponent<UserInterfaceController>().DisableAllGamePanels ();
 		UI_Wait.SetActive (false);
 		UI_Panel.SetActive (true);
 		UI_Setup.SetActive (true);
-		// TODO disable everything except UI_Wait
 		// TODO Is not necessary right?
 		//userInterfaceController.PlayerObject = null;
 		base.OnStopClient ();

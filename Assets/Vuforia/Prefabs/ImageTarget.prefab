@@ -89,7 +89,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mTrackableName: '--- EMPTY ---'
-  mPreviousScale: {x: 1, y: 1, z: 1}
   mPreserveChildSize: 0
   mInitializedInEditor: 0
   mDataSetPath: '--- EMPTY ---'

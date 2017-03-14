@@ -14,9 +14,9 @@ public class GyroController : MonoBehaviour
 	private const float lowPassFilterFactor = 0.2f;
 
 	private readonly Quaternion baseIdentity =  Quaternion.Euler(90, 0, 0);
-	private readonly Quaternion landscapeRight =  Quaternion.Euler(0, 0, 90);
-	private readonly Quaternion landscapeLeft =  Quaternion.Euler(0, 0, -90);
-	private readonly Quaternion upsideDown =  Quaternion.Euler(0, 0, 180);
+	//private readonly Quaternion landscapeRight =  Quaternion.Euler(0, 0, 90);
+	//private readonly Quaternion landscapeLeft =  Quaternion.Euler(0, 0, -90);
+	//private readonly Quaternion upsideDown =  Quaternion.Euler(0, 0, 180);
 	
 	private Quaternion cameraBase =  Quaternion.identity;
 	private Quaternion calibration =  Quaternion.identity;
@@ -199,22 +199,7 @@ public class GyroController : MonoBehaviour
 	/// </returns>
 	private Quaternion GetRotFix()
 	{
-#if UNITY_3_5
-		if (Screen.orientation == ScreenOrientation.Portrait)
-			return Quaternion.identity;
-		
-		if (Screen.orientation == ScreenOrientation.LandscapeLeft || Screen.orientation == ScreenOrientation.Landscape)
-			return landscapeLeft;
-				
-		if (Screen.orientation == ScreenOrientation.LandscapeRight)
-			return landscapeRight;
-				
-		if (Screen.orientation == ScreenOrientation.PortraitUpsideDown)
-			return upsideDown;
 		return Quaternion.identity;
-#else
-		return Quaternion.identity;
-#endif
 	}
 	
 	/// <summary>

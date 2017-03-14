@@ -19,6 +19,7 @@ namespace Vuforia.EditorClasses
     {
         private static readonly string VUFORIA_ANDROID_SETTINGS = "VUFORIA_ANDROID_SETTINGS";
         private static readonly string VUFORIA_IOS_SETTINGS = "VUFORIA_IOS_SETTINGS";
+        private static readonly string VUFORIA_WSA_SETTINGS = "VUFORIA_WSA_SETTINGS";
         
         static ExtensionImport() 
         {
@@ -45,6 +46,18 @@ namespace Vuforia.EditorClasses
                     imp.SetCompatibleWithEditor(true);
                 }
             }
+
+
+
+            // create default Vuforia Configuration and check clipping shader
+            var config = VuforiaConfigurationEditor.LoadConfigurationObject();
+            var videoBgConfig = config.VideoBackground;
+            if (videoBgConfig.MatteShader == null && videoBgConfig.ClippingMode != HideExcessAreaAbstractBehaviour.CLIPPING_MODE.NONE)
+            {
+                Undo.RecordObject(config, "Setting Matte Shader");
+                videoBgConfig.SetDefaultMatteShader();
+                EditorUtility.SetDirty(config);
+            }
         }
         
         static void UpdatePlayerSettings()
@@ -54,6 +67,7 @@ namespace Vuforia.EditorClasses
 
             BuildTargetGroup androidBuildTarget = BuildTargetGroup.Android;
             BuildTargetGroup iOSBuildTarget = BuildTargetGroup.iOS;
+            BuildTargetGroup wsaBuildTarget = BuildTargetGroup.WSA;
 
             string androidSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(androidBuildTarget);
             androidSymbols = androidSymbols ?? "";
@@ -73,12 +87,11 @@ namespace Vuforia.EditorClasses
                     PlayerSettings.Android.androidTVCompatibility = false;
                 }
 
-#if !UNITY_5_0 // UNITY_5_1 and newer
                 Debug.Log("Setting Android Graphics API to OpenGL ES 2.0.");
                 PlayerSettings.SetGraphicsAPIs(
                     BuildTarget.Android,
                     new UnityEngine.Rendering.GraphicsDeviceType[]{UnityEngine.Rendering.GraphicsDeviceType.OpenGLES2});
-#endif
+
                 // Here we set the scripting define symbols for Android
                 // so we can remember that the settings were set once.
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.Android,
@@ -109,6 +122,38 @@ namespace Vuforia.EditorClasses
                 // so we can remember that the settings were set once.
                 PlayerSettings.SetScriptingDefineSymbolsForGroup(iOSBuildTarget, 
                                                                  iOSSymbols + ";" + VUFORIA_IOS_SETTINGS);
+            }
+
+
+#if UNITY_5_4_OR_NEWER
+#if ! (UNITY_5_4_0 || UNITY_5_4_1)
+            if (PlayerSettings.iOS.cameraUsageDescription.Length == 0)
+            {
+                Debug.Log("Setting default camera usage description for iOS.");
+                PlayerSettings.iOS.cameraUsageDescription = "Camera access required for target detection and tracking";
+            }
+#endif
+#endif
+
+            string wsaSymbols = PlayerSettings.GetScriptingDefineSymbolsForGroup(wsaBuildTarget);
+            wsaSymbols = wsaSymbols ?? "";
+            if (!wsaSymbols.Contains(VUFORIA_WSA_SETTINGS))
+            {
+                // The Windows SDK we want to use is "Universal 10"
+                EditorUserBuildSettings.wsaSDK = WSASDK.UWP;
+
+                // We want to use the Webcam (obviously); to acheive this, UWP forces us to also require access 
+                // to the microphone (which is not so obvious)
+                PlayerSettings.WSA.SetCapability(PlayerSettings.WSACapability.WebCam, true);
+                PlayerSettings.WSA.SetCapability(PlayerSettings.WSACapability.Microphone, true);
+
+                // Vuforia SDK for UWP now also requires InternetClient Access
+                PlayerSettings.WSA.SetCapability(PlayerSettings.WSACapability.InternetClient, true);
+
+                // Here we set the scripting define symbols for WSA
+                // so we can remember that the settings were set once.
+                PlayerSettings.SetScriptingDefineSymbolsForGroup(BuildTargetGroup.WSA,
+                                                                 wsaSymbols + ";" + VUFORIA_WSA_SETTINGS);
             }
         }
     }

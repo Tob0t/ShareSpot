@@ -37,11 +37,6 @@ namespace Vuforia
             return gameObject.AddComponent<ImageTargetBehaviour>();
         }
 
-        public MarkerAbstractBehaviour AddMarkerBehaviour(GameObject gameObject)
-        {
-            return gameObject.AddComponent<MarkerBehaviour>();
-        }
-
         public MultiTargetAbstractBehaviour AddMultiTargetBehaviour(GameObject gameObject)
         {
             return gameObject.AddComponent<MultiTargetBehaviour>();
@@ -67,6 +62,15 @@ namespace Vuforia
             return gameObject.AddComponent<ObjectTargetBehaviour>();
         }
 
+        public VuMarkAbstractBehaviour AddVuMarkBehaviour(GameObject gameObject)
+        {
+            return gameObject.AddComponent<VuMarkBehaviour>();
+        }
+
+        public VuforiaAbstractConfiguration CreateVuforiaConfiguration()
+        {
+            return ScriptableObject.CreateInstance<VuforiaConfiguration>();
+        }
 
         #endregion // PUBLIC_METHODS
     }
