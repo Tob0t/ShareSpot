@@ -10,6 +10,9 @@ using System.IO;
 /// </summary>
 public class GameController : NetworkBehaviour {
 
+	[SyncVar]
+	public bool isGameActive = false;
+
 	public GameObject PickupPrefab;
 	public float minX = 100f;
 	public float maxX = 1820f;
@@ -36,6 +39,8 @@ public class GameController : NetworkBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		if (!isServer)
+			return;
 		// disable Start Game Button first
 		//ButtonStartGame.SetActive (false);
 
@@ -105,6 +110,7 @@ public class GameController : NetworkBehaviour {
 		// Debugging on the server
 		DebugGame.text += "Start Game\n";
 		DebugGame.text += "Connected Players: "+MyNetworkManager.Instance.numPlayers +"\n";
+		isGameActive = true;
 
 		for (int j = 0; j <= MyNetworkManager.Instance.numPlayers; j++) {
 			allChallenges [j] = new List<Challenge> ();
@@ -127,12 +133,14 @@ public class GameController : NetworkBehaviour {
 			i++;
 		}
 
-		// Loop to disable the Pickups of other players
+		// Start the game on each client
 		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
 			if (connectedClient != null) {
-				connectedClient.GetComponent<PlayerController>().RpcShowOnlyOwnPickups ();	
+				connectedClient.GetComponent<PlayerController>().RpcStartGame ();	
 			}
 		}
+
+
 	}
 
 
@@ -162,6 +170,9 @@ public class GameController : NetworkBehaviour {
 
 	/// <summary>
 	/// Called when the file is received to verify if challenge is successful
+	/// <param name="senderId">the player id of the sender</param>
+	/// <param name="receiverId">the player id of the receiver</param>
+	/// <returns>boolean whether the challenge is successful</returns>
 	/// </summary>
 	public bool VerifyChallenge(int senderId, int receiverId){
 		// Get Challenge from the stored ones
@@ -191,7 +202,7 @@ public class GameController : NetworkBehaviour {
 	/// </summary>
 	public void SaveData(){
 
-		string currentDataPath = Application.persistentDataPath +"/Challenges_"+System.DateTime.Now.ToString("yyyymmdd_HHmm")+".json";
+		string currentDataPath = Application.persistentDataPath +"/Challenges_"+System.DateTime.Now.ToString("yyyyMMdd_HHmmss")+".json";
 		Debug.Log ("Saving file to " + currentDataPath);
 		DebugGame.text = "Saving file to " + currentDataPath;
 

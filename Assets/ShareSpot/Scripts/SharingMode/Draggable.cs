@@ -9,17 +9,23 @@ using UnityEngine.EventSystems;
 
 public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
 
-	public Transform parentToReturnTo = null;	///< Parent of the currently clicked object
-	public Transform placeholderParent = null;	///< Placedholder for parent object
+	#region [Public fields]
+	public Color MarkAvailable = Color.yellow;	///< Color to show all available dropable objects when start dragging
+	public Color MarkHover = Color.green;	///< Color to show when an object is hovered
+	public Color MarkDeselected = Color.black;	///< Color to show when dragging is finished
+	public GameObject FilteToShare; ///< Reference to the file to share
+	public GameObject UserInterface; ///< Reference to user interface
 
-	public GameObject placeholder = null;	///< Placeholder object which acts as "available space" between the files
-	public GameObject hitObject = null;	///< GameObject which is hit during onDrag
+	#endregion
 
-	public Color markAvailable = Color.yellow;	///< Color to show all available dropable objects when start dragging
-	public Color markHover = Color.green;	///< Color to show when an object is hovered
-	public Color markDeselected = Color.black;	///< Color to show when dragging is finished
+	#region [Private fields]
+	private Transform parentToReturnTo = null;	///< Parent of the currently clicked object
+	private Transform placeholderParent = null;	///< Placedholder for parent object
+	private GameObject placeholder = null;	///< Placeholder object which acts as "available space" between the files
+	private GameObject hitObject = null;	///< GameObject which is hit during onDrag
 
-	public GameObject UserInterface;
+	#endregion
+
 
 	// Called when user starts to drag something
 	public void OnBeginDrag(PointerEventData eventData){
@@ -56,7 +62,7 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		foreach (GameObject dropable in GameObject.FindGameObjectsWithTag("Player")) {
 			// TODO: save original color
 			//Color current = droppable.GetComponent<MeshRenderer> ().material.color;
-			dropable.GetComponent<MeshRenderer> ().material.color = markAvailable;
+			dropable.GetComponent<MeshRenderer> ().material.color = MarkAvailable;
 		}
 	}
 
@@ -98,13 +104,13 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 	// Mark Object when the Drag is hovering it
 	void MarkObject(GameObject obj) {
 		if(obj != null) {
-			obj.GetComponent<MeshRenderer> ().material.color = markHover;
+			obj.GetComponent<MeshRenderer> ().material.color = MarkHover;
 		}
 	}
 
 	// Reset Object when Drag is not hovering anymore
 	void ClearSelection() {
-		hitObject.GetComponent<MeshRenderer> ().material.color = markAvailable;
+		hitObject.GetComponent<MeshRenderer> ().material.color = MarkAvailable;
 		hitObject = null;
 	}
 
@@ -131,7 +137,7 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		// Reset all droppable Objects back
 		foreach (GameObject droppable in GameObject.FindGameObjectsWithTag("Player")) {
 			//Color current = droppable.GetComponent<MeshRenderer> ().material.color;
-			droppable.GetComponent<MeshRenderer> ().material.color = markDeselected;
+			droppable.GetComponent<MeshRenderer> ().material.color = MarkDeselected;
 		}
 
 		// If the object is dropped on a valid hitObject

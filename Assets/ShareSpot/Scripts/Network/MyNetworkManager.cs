@@ -18,19 +18,18 @@ public class MyNetworkManager : NetworkManager {
 	public Text DebugTextClient; ///< Debugging the actions of the client
 	public Text DebugTextServer; ///< Debugging the actions of the server
 
-
-
 	// Gameobjects for Userinterfaces Client
 	public GameObject UI_Setup;	///< Userinterface for Starting Setup Scene
 	public GameObject UI_Wait; ///< Userinterface for Waiting Setup Scene
 	public GameObject UI_Panel; ///< Userinterface Panel for Setup
 	public GameObject UserInterfaceController; ///< Userinterface Controller for controlling the inputs
 
-
 	// Gameobjects for Userinterfaces Server
 	public GameObject ButtonStartServer; ///< Button to start the server
 	public GameObject ButtonStopServer; ///< Button to stop the server
 	public GameObject GamePanel; ///< GamePanel for controlling a Game
+
+	public bool isGameActive = false;
 
 	#endregion
 
@@ -71,6 +70,7 @@ public class MyNetworkManager : NetworkManager {
 	public void StopServerHosting()
 	{
 		StopServer();
+
 		GamePanel.SetActive (false);
 		ButtonStopServer.SetActive (false);
 		ButtonStartServer.SetActive (true);
@@ -91,6 +91,10 @@ public class MyNetworkManager : NetworkManager {
 		// Cleanup and delete all clients
 		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
 			NetworkServer.Destroy (connectedClient);
+		}
+		// Cleanup and delete all pickups
+		foreach (GameObject pickup in GameObject.FindGameObjectsWithTag("Pickup")){
+			NetworkServer.Destroy (pickup);
 		}
 		DebugTextServer.text = "Server stopped";
 	}

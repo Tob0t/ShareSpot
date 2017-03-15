@@ -22,7 +22,7 @@ public class PlayerController : NetworkBehaviour{
 	public int CollectedPickups;
 	[SyncVar]
 	public int SharingMode;
-	public int ShowChallengesRate = 3;
+	public int ShowChallengesRate = 2;
 	public GameObject ControllingPlayer;
 	public GameObject FilePrefab;
 	public Transform FileSpawn;
@@ -56,7 +56,6 @@ public class PlayerController : NetworkBehaviour{
 	private GameObject PlayerUserInterface;
 
 	private GameObject ARCamera;
-
 
 	#endregion
 
@@ -208,14 +207,20 @@ public class PlayerController : NetworkBehaviour{
 		Destroy(sharedFile, 30.0f);
 	}
 
-	// Command executed on the server for changing the name
+	/// <summary>
+	/// Command executed on the server for changing the name
+	/// <param name="newName">a new name</param>
+	/// </summary>
 	[Command]
 	public void CmdChangeName(string newName){
 		PlayerName = newName;
 		Admin.Instance.ClientButtons [ConnectionId].GetComponentInChildren<Text> ().text = newName;
 	}
 
-	// Command executed on the server for moving the pickup to a new random location
+	/// <summary>
+	/// Command executed on the server for moving the pickup to a new random location
+	/// <param name="pickup">the collected pickup </param>
+	/// </summary>
 	[Command]
 	public void CmdPickupCollected(GameObject pickup){
 		Debug.Log ("Move Pickup");
@@ -231,37 +236,44 @@ public class PlayerController : NetworkBehaviour{
 
 	/// <summary>
 	/// Command executed on the server for receiving a file
+	/// <param name="file">the received file </param>
+	/// <param name="senderId">the player id of the sender </param>
+	/// <param name="receiverId">the player id of the receiver </param>
 	/// </summary>
-	// TODO Show file (null)
+	// TODO Show file (change to SharedFile instead of GameObject?
 	[Command]
 	public void CmdReceiveFile(GameObject file, int senderId, int receiverId){
 		Debug.Log ("Sender ID :" + senderId);
 		Debug.Log ("ReceiverId ID :" + receiverId);
-		bool challengeState = GameManager.GetComponent<GameController> ().VerifyChallenge (senderId, receiverId);
+		bool challengeState = false;
 
+		// Check if there is a game currently running
+		//if (MyNetworkManager.Instance.isGameActive) {
+		if(GameManager.GetComponent<GameController> ().isGameActive){
+			challengeState = GameManager.GetComponent<GameController> ().VerifyChallenge (senderId, receiverId);
+		} else{
+			// if the game is not active
+			// Call the rpc receiving file on the receiving player
+			Admin.Instance.ConnectedClients [receiverId].GetComponent<PlayerController> ().RpcReceiveFile (file);
+		}
 		// Forward to sending client that the file was sent
-		Admin.Instance.ConnectedClients[senderId].GetComponent<PlayerController>().RpcFileSent(challengeState);
-
-		// only needed if I want the the receiver to show trigger
-		//Admin.Instance.ConnectedClients[receiverId].GetComponent<PlayerController>().GetComponent<PlayerController>().RpcReceiveFile (file);
+		Admin.Instance.ConnectedClients [senderId].GetComponent<PlayerController> ().RpcFileSent (challengeState);
 	}
 		
 	/// <summary>
 	/// ClientRpc executed on the client for feedback of a sent file
 	/// </summary>
+	/// <param name="challengeState">Indicates whether the challenge is succesful or failed</param>
 	[ClientRpc]
 	public void RpcFileSent(bool challengeState){
 		if (isLocalPlayer) {
-			if (challengeState) {
-				// TODO: move instructions to one function in UserInterfaceController and show successfull message for x seconds
-				// Disable the instruction panel
-				PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleGamePanel (false);
-
-				// Disable the sharing mode panel
-				PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleSharingModePanel(false);
+			// Check if there is a game currently running
+			if(PlayerUserInterface.GetComponent<UserInterfaceController> ().GameManager.GetComponent<GameController> ().isGameActive){
+				// Adpat all necessary panels
+				PlayerUserInterface.GetComponent<UserInterfaceController> ().AdaptPanels (challengeState);
 			} else {
-				// Show error panel
-				PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowErrorPanel ();
+				// Just activate the success panel
+				PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowSuccessPanel ();
 			}
 		}
 	}
@@ -276,7 +288,7 @@ public class PlayerController : NetworkBehaviour{
 			PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowNewChallenge (description);
 
 			// Enable the sharing mode panel which is assigned to the client
-			PlayerUserInterface.GetComponent<UserInterfaceController> ().ToggleSharingModePanel(true);
+			PlayerUserInterface.GetComponent<UserInterfaceController> ().TogglePlayersSharingModePanel(true);
 		}
 	}
 
@@ -284,8 +296,14 @@ public class PlayerController : NetworkBehaviour{
 	/// ClientRpc to Show only the own pickups when collecting (called only once when game is started by GameController)
 	/// </summary>
 	[ClientRpc]
-	public void RpcShowOnlyOwnPickups(){
+	public void RpcStartGame(){
 		if (isLocalPlayer) {
+			// Disable all current panels
+			PlayerUserInterface.GetComponent<UserInterfaceController> ().DisableAllGamePanels ();
+
+			// Enable Game start panel
+			PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowGameStartPanel();
+
 			// Loop through all pickups and only activate the right one
 			foreach (GameObject pickup  in GameObject.FindGameObjectsWithTag("Pickup")) {
 				if (pickup.GetComponent<PickupController> ().ValidForConnectionId == ConnectionId) {
@@ -298,7 +316,7 @@ public class PlayerController : NetworkBehaviour{
 	}
 
 	/// <summary>
-	/// Show trigger when local player receives a File
+	/// Show trigger when local player receives physically a file (called by localPlayer)
 	/// For game not needed
 	/// </summary>
 	public void ReceiveFile(GameObject file){
@@ -306,9 +324,11 @@ public class PlayerController : NetworkBehaviour{
 
 			CmdReceiveFile(file, file.GetComponent<SharedFile>().SourceId, ConnectionId);
 
-			// Show Incoming file on local client 
-			// For GameMode not needed
-			//PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowIncomingFile (file);
+			// TODO: not neede right?
+			// Show incoming file on the local client on the receiver only if the game is not active
+			/*if (!MyNetworkManager.Instance.isGameActive) {
+				PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowIncomingFile (file);
+			}*/
 		}
 	}
 		
@@ -348,14 +368,13 @@ public class PlayerController : NetworkBehaviour{
 		yield return new WaitForSeconds(4f);
 		gameObject.GetComponent<MeshRenderer> ().material.color = current;
 	}
+	
 
-
-	/*
-	/// FOR GAME MODE NOT NEEDED
-	/// TODO: Check if game is running or not
 	/// <summary>
-	/// ClientRpc executed on the client for receiving the file and showing incoming file
+	/// Called when a file is received and triggers an action on the receiving player.
+	/// Only available if there is no game running
 	/// </summary>
+	/// <param name="file">The file which was sent.</param>
 	[ClientRpc]
 	public void RpcReceiveFile(GameObject file){
 		if (isLocalPlayer) {
@@ -364,5 +383,4 @@ public class PlayerController : NetworkBehaviour{
 	}
 
 
-	*/
 }

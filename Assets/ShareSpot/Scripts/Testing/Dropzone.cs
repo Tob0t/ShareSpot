@@ -14,7 +14,7 @@ public class Dropzone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 		Draggable d = eventData.pointerDrag.GetComponent<Draggable> ();
 		if (d != null) {
 			//if (typeOfItem == d.typeOfItem || typeOfItem == Draggable.Slot.INVENTORY) {
-			d.placeholderParent = this.transform;
+			///d.placeholderParent = this.transform;
 			//}
 		}
 	}
@@ -25,12 +25,12 @@ public class Dropzone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 		if(eventData.pointerDrag == null)
 			return;
 
-		Draggable d = eventData.pointerDrag.GetComponent<Draggable> ();
-		if (d != null && d.placeholderParent == this.transform) {
+		///Draggable d = eventData.pointerDrag.GetComponent<Draggable> ();
+		///if (d != null && d.placeholderParent == this.transform) {
 			//if (typeOfItem == d.typeOfItem || typeOfItem == Draggable.Slot.INVENTORY) {
-			d.placeholderParent = d.parentToReturnTo;
+			///d.placeholderParent = d.parentToReturnTo;
 			//}
-		}
+		///}
 	}
 
 	public void OnDrop(PointerEventData eventData){
@@ -39,7 +39,7 @@ public class Dropzone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 		Draggable d = eventData.pointerDrag.GetComponent<Draggable> ();
 		if (d != null) {
 			//if (typeOfItem == d.typeOfItem || typeOfItem == Draggable.Slot.INVENTORY) {
-				d.parentToReturnTo = this.transform;
+				///d.parentToReturnTo = this.transform;
 			//}
 		}
 	}
