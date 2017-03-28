@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.Networking;
 
 /// <summary>
-// Rotata and face the camera everytime
+// Rotate and face the camera everytime.
 /// </summary>
 public class FaceCamera : NetworkBehaviour {
 
@@ -16,7 +16,7 @@ public class FaceCamera : NetworkBehaviour {
 	void Update () {
 		if (Camera.current != null) {
 			this.transform.LookAt (Camera.current.transform.position);
-			//this.transform.LookAt (GameObject.FindGameObjectWithTag("ARCamera").transform.position);
+			// Rotate for 180° otherwise it is displayed upside down
 			this.transform.Rotate (new Vector3 (0, 180, 0));
 		}
 	}

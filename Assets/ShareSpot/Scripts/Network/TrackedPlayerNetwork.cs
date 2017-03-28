@@ -3,14 +3,14 @@ using System.Collections;
 using UnityEngine.Networking;
 
 /// <summary>
-// TrackedPlayerNetwork is using some network-related commands
+/// TrackedPlayerNetwork is using some network-related commands.
 /// </summary>
 public class TrackedPlayerNetwork : NetworkBehaviour {
 
 	#region [Public fields]
 	[SyncVar]
-	public bool HasPlayer; ///< Indicates if the TrackedPlayer is already connected to a device
-	public GameObject ControlledPlayer; ///< Gameobject which is controlling the player
+	public bool HasPlayer; ///< Indicates if the TrackedPlayer is already connected to a device.
+	public GameObject ControlledPlayer; ///< Gameobject which is controlling the player.
 
 	#endregion
 
@@ -26,19 +26,24 @@ public class TrackedPlayerNetwork : NetworkBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		// If the network is active and the server, spawn the tracked player.
 		if (NetworkServer.active) {
 			if (MyNetworkManager.Instance.IsServer) {
 				NetworkServer.Spawn (gameObject);
 			}
 		}
+
+		// If a device is already connected to it disable it 
 		if (HasPlayer) {
 			gameObject.SetActive (false);
-		} else {
+		} else { // otherwise enable
 			gameObject.SetActive (true);
 		}
 	}
 
-	// Called when the GameObject is selected
+	/// <summary>
+	/// Called when the GameObject is selected.
+	/// </summary>
 	void OnMouseDown(){
 		if (isServer) {
 			Admin.Instance.CurrentTrackedPlayer = gameObject;
@@ -46,7 +51,10 @@ public class TrackedPlayerNetwork : NetworkBehaviour {
 		StartCoroutine ("SelectPlayer");
 	}
 
-	// Coroutine to change the color for 4 seconds
+	/// <summary>
+	///	Coroutine to change the color for 4 seconds.
+	/// </summary>
+	/// <returns>The seconds to wait for.</returns>
 	IEnumerator SelectPlayer(){
 		Color current = _body.GetComponent<MeshRenderer> ().material.color;
 		_body.GetComponent<MeshRenderer> ().material.color = Color.red;

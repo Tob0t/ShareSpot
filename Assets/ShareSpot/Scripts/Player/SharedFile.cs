@@ -8,13 +8,16 @@ using UnityEngine.Networking;
 public class SharedFile : NetworkBehaviour {
 
 	[SyncVar]
-	public int SourceId;
-	public string Name = "ExampleFile";
-	public string Author = "Max Mustermann";
-	public int size = 100;
+	public int SourceId;	///< ID of the sending player of the file.
+	public string Name = "ExampleFile";	///< Example name of the file.
+	public string Author = "Max Mustermann";	///< Example author of the file.
+	public int Size = 100;	///< Example size of the file.
 
-	// As soon as the sharedFile determines a collision it calls a function on the PlayerObject and destroys the object
-    void OnCollisionEnter(Collision collision)
+	/// <summary>
+	/// As soon as the sharedFile determines a collision it calls a function on the PlayerObject and destroys the object.
+	/// </summary>
+	/// <param name="collision">Collision componente of the other game object.</param>
+	void OnCollisionEnter(Collision collision)
     {
         var hit = collision.gameObject;
 		if (hit.CompareTag ("Player")) {

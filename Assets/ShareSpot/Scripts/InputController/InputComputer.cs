@@ -2,22 +2,28 @@
 using System.Collections;
 
 /// <summary>
-// Class for Computer Input 
+/// Class for Computer Input 
 /// </summary>
 public class InputComputer: IInputMode{
 
-	// Returns Key for Fire
+	/// <summary>
+	/// Returns Key for Fire.
+	/// </summary>
 	public bool Fire() {
 		return Input.GetKeyDown(KeyCode.Space);
 	}
 
-	// Returns Keys for Turning
+	/// <summary>
+	/// Returns Keys for Turning.
+	/// </summary>
 	public float Turn ()
 	{
 		return Input.GetAxis ("Horizontal");
 	}
 
-	// Returns Keys for Moving
+	/// <summary>
+	/// Returns Keys for Moving.
+	/// </summary>
 	public float Move ()
 	{
 		return Input.GetAxis ("Vertical");

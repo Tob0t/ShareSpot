@@ -4,30 +4,30 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 
 /// <summary>
-// MyNetworkManager inherits from NetworManager for customizing some functions
+/// MyNetworkManager inherits from NetworManager for customizing some functions.
 /// </summary>
 public class MyNetworkManager : NetworkManager {
 
 	#region [Public fields]
 	public static MyNetworkManager Instance = null;	///< static instance of MyNetworkManager which allows it to be accessed by any other script.
-	public string ConnectionIP; ///< The IP-Address to connect to
-	public int ConnectionPort = 7777; ///< The Port to connect to (Standard is 7777)
-	public bool ClientConnected = false; ///< Determine if a client is already connected (Standard is false)
-	public bool IsServer;	///< Determine if the caller is a Server
-	public bool IsClient; ///< Determine if the caller is a Client
-	public Text DebugTextClient; ///< Debugging the actions of the client
-	public Text DebugTextServer; ///< Debugging the actions of the server
+	public string ConnectionIP; ///< The IP-Address to connect to.
+	public int ConnectionPort = 7777; ///< The Port to connect to (Standard is 7777).
+	public bool ClientConnected = false; ///< Determine if a client is already connected (Standard is false).
+	public bool IsServer;	///< Determine if the caller is a Server.
+	public bool IsClient; ///< Determine if the caller is a Client.
+	public Text DebugTextClient; ///< Debugging the actions of the client.
+	public Text DebugTextServer; ///< Debugging the actions of the server.
 
-	// Gameobjects for Userinterfaces Client
-	public GameObject UI_Setup;	///< Userinterface for Starting Setup Scene
-	public GameObject UI_Wait; ///< Userinterface for Waiting Setup Scene
-	public GameObject UI_Panel; ///< Userinterface Panel for Setup
-	public GameObject UserInterfaceController; ///< Userinterface Controller for controlling the inputs
+	/// Gameobjects for Userinterfaces Client
+	public GameObject UI_Setup;	///< Userinterface for Starting Setup Scene.
+	public GameObject UI_Wait; ///< Userinterface for Waiting Setup Scene.
+	public GameObject UI_Panel; ///< Userinterface Panel for Setup.
+	public GameObject UserInterfaceController; ///< Userinterface Controller for controlling the inputs.
 
-	// Gameobjects for Userinterfaces Server
-	public GameObject ButtonStartServer; ///< Button to start the server
-	public GameObject ButtonStopServer; ///< Button to stop the server
-	public GameObject GamePanel; ///< GamePanel for controlling a Game
+	/// Gameobjects for Userinterfaces Server
+	public GameObject ButtonStartServer; ///< Button to start the server.
+	public GameObject ButtonStopServer; ///< Button to stop the server.
+	public GameObject GamePanel; ///< GamePanel for controlling a Game.
 
 	public bool isGameActive = false;
 
@@ -49,14 +49,12 @@ public class MyNetworkManager : NetworkManager {
 		DontDestroyOnLoad(gameObject);
 	}
 
-	// Manually setting IP Address
-	void SetIPAddress()
-	{
-		networkAddress = ConnectionIP;
-	}
+
 
 	#region Server
-	// Procedures when starting the server
+	/// <summary>
+	/// Procedures when starting the server.
+	/// </summary>
 	public void StartServerHosting()
 	{
 		StartServer();
@@ -66,25 +64,30 @@ public class MyNetworkManager : NetworkManager {
 		NetworkServer.SpawnObjects();
 	}
 
-	// Procedures when stopping the server
+	/// <summary>
+	/// Procedures when stopping the server.
+	/// </summary>
 	public void StopServerHosting()
 	{
 		StopServer();
-
 		GamePanel.SetActive (false);
 		ButtonStopServer.SetActive (false);
 		ButtonStartServer.SetActive (true);
 		NetworkServer.Reset();
 	}
 
-	// Override function when the server starts
+	/// <summary>
+	/// Override function when the server starts.
+	/// </summary>
 	public override void OnStartServer()
 	{
 		base.OnStartServer();
 		DebugTextServer.text = "Server started";
 	}
 
-	// Override function when the server stopps
+	/// <summary>
+	/// Override function when the server stopps.
+	/// </summary>
 	public override void OnStopServer()
 	{
 		base.OnStopServer();
@@ -99,7 +102,10 @@ public class MyNetworkManager : NetworkManager {
 		DebugTextServer.text = "Server stopped";
 	}
 
-	// Override function when a client connects
+	/// <summary>
+	/// Override function when a client connects.
+	/// </summary>
+	/// <param name="conn">Connection id of the client.</param>
 	public override void OnServerConnect(NetworkConnection conn)
 	{
 		base.OnServerConnect(conn);
@@ -113,17 +119,24 @@ public class MyNetworkManager : NetworkManager {
 
 	}
 
-	// Override function when a client disconnects
+	/// <summary>
+	/// Override function when a client disconnects.
+	/// </summary>
+	/// <param name="conn">Connection id of the client.</param>
 	public override void OnServerDisconnect(NetworkConnection conn)
 	{
 		// show the template of a tracked player if the client is not connected anymore
 		Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.SetActive (true);
-		base.OnServerDisconnect(conn);
 		toggleClientPanel (conn, false);
 		DebugTextClient.text += "Client " + conn.connectionId + " disconnected.\n";
+		base.OnServerDisconnect(conn);
 	}
 
-	// Toggle the Buttons in ClientPanel depending on the current connection
+	/// <summary>
+	/// Toggle the Buttons in ClientPanel depending on the current connection.
+	/// </summary>
+	/// <param name="conn">Connection id of the client.</param>
+	/// <param name="toggleMode">Specifies if it should be shown or hidden.</param>
 	private void toggleClientPanel(NetworkConnection conn, bool toggleMode){
 		Admin.Instance.ClientButtons [conn.connectionId].gameObject.SetActive (toggleMode);
 	}
@@ -131,14 +144,28 @@ public class MyNetworkManager : NetworkManager {
 	#endregion
 
 	#region Client
-	// Override function when a client connects (on client side)
+
+	/// <summary>
+	/// Manually setting IP Address.
+	/// </summary>
+	void SetIPAddress()
+	{
+		networkAddress = ConnectionIP;
+	}
+
+	/// <summary>
+	/// Override function when a client connects (on client side).
+	/// </summary>
+	/// <param name="conn">Conn.</param>
 	public override void OnClientConnect(NetworkConnection conn){
 		base.OnClientConnect (conn);
 		UI_Setup.SetActive (false);
 		UI_Wait.SetActive (true);
 	}
 
-	// Procedure when a Client connects to the Server
+	/// <summary>
+	/// Procedure when a Client connects to the Server.
+	/// </summary>
 	public void JoinServer()
 	{
 		SetIPAddress();
@@ -146,7 +173,9 @@ public class MyNetworkManager : NetworkManager {
 		IsClient = true;
 	}
 
-	// Procedure to let the client reconnect
+	/// <summary>
+	/// Procedure to let the client reconnect.
+	/// </summary>
 	public void ReconnectClient()
 	{
 		StopClient();
@@ -156,13 +185,18 @@ public class MyNetworkManager : NetworkManager {
 		StartCoroutine("Reconnect");
 	}
 
+	/// <summary>
+	/// Reconnect to the server after waiting for 1 second.
+	/// </summary>
 	IEnumerator Reconnect()
 	{
 		yield return new WaitForSeconds(1f);
 		JoinServer();
 	}
 
-	// Procedure if the client is stopped
+	/// <summary>
+	/// Procedure if the client is stopped.
+	/// </summary>
 	public override void OnStopClient(){
 		UserInterfaceController.GetComponent<UserInterfaceController>().DisableAllGamePanels ();
 		UI_Wait.SetActive (false);

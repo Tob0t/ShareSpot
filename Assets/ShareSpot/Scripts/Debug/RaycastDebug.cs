@@ -2,17 +2,17 @@
 using System.Collections;
 
 /// <summary>
-// Returns the clicked object for debugging reasons
+/// Returns the clicked object for debugging.
 /// </summary>
 public class RaycastDebug : MonoBehaviour {
 
 	void Update () {
 		
 		if (Input.GetMouseButtonDown (0)) {
-			//Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 			//Ray ray = Camera.current.ScreenPointToRay(Input.mousePosition);
-			Debug.Log (Camera.allCameras[1].gameObject);
-			Ray ray = Camera.allCameras[1].ScreenPointToRay(Input.mousePosition);
+			//Debug.Log (Camera.allCameras[1].gameObject);
+			//Ray ray = Camera.allCameras[1].ScreenPointToRay(Input.mousePosition);
 			RaycastHit hit;
 			if (Physics.Raycast(ray, out hit)) {
 				Debug.Log ("Name = " + hit.collider.name);

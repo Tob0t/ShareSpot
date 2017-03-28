@@ -2,6 +2,9 @@
 using System.Collections;
 using UnityEngine.Networking;
 
+/// <summary>
+/// TODO: not needed?
+/// </summary>
 public class CollisionController : NetworkBehaviour {
 
 	public GameObject GameManager;

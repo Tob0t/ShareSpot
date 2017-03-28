@@ -2,16 +2,21 @@
 using System.Collections;
 using UnityEngine.Networking;
 
+/// <summary>
+/// The pickup controller is managing the state of a specific pickup.
+/// </summary>
 public class PickupController : NetworkBehaviour {
 
-	public GameObject AssociatedNetworkPlayer;
+	public GameObject AssociatedNetworkPlayer;	///< TODO: not needed?	The networkplayer who is collecting the pickup.
 	[SyncVar]
-	public Color ChosenColor;
+	public Color ChosenColor;	///< The color of the pickup.
 	[SyncVar]
-	public int ValidForConnectionId;
+	public int ValidForConnectionId;	///< The connection id of the player for which the pickup should only be displayed.
 
 	// Use this for initialization
 	void Start () {
+
+		// Set the color to the chosen color for the specific player
 		SetColor (ChosenColor);
 	}
 	
@@ -26,6 +31,10 @@ public class PickupController : NetworkBehaviour {
 		}*/
 	}
 
+	/// <summary>
+	/// Sets the color to the chosen color for the specific player.
+	/// </summary>
+	/// <param name="color">Color.</param>
 	private void SetColor(Color color){
 		GetComponent<MeshRenderer> ().material.color = ChosenColor;
 	}

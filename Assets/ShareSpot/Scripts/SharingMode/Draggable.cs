@@ -4,7 +4,7 @@ using System.Collections;
 using UnityEngine.EventSystems;
 
 /// <summary>
-// Class for Controlling DragNDrop Behaviour
+// Class for controlling DragNDrop Behaviour
 /// </summary>
 
 public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
@@ -19,10 +19,10 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 	#endregion
 
 	#region [Private fields]
-	private Transform parentToReturnTo = null;	///< Parent of the currently clicked object
-	private Transform placeholderParent = null;	///< Placedholder for parent object
-	private GameObject placeholder = null;	///< Placeholder object which acts as "available space" between the files
-	private GameObject hitObject = null;	///< GameObject which is hit during onDrag
+	private Transform _parentToReturnTo = null;	///< Parent of the currently clicked object
+	private Transform _placeholderParent = null;	///< Placedholder for parent object
+	private GameObject _placeholder = null;	///< Placeholder object which acts as "available space" between the files
+	private GameObject _hitObject = null;	///< GameObject which is hit during onDrag
 
 	#endregion
 
@@ -32,22 +32,22 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		Debug.Log ("OnBeginDrag");
 
 		// Create placeholder object and set the same parent as the dragged object
-		placeholder = new GameObject ();
-		placeholder.transform.SetParent (this.transform.parent);
+		_placeholder = new GameObject ();
+		_placeholder.transform.SetParent (this.transform.parent);
 
 		// Set the same layout measurements
-		LayoutElement le = placeholder.AddComponent<LayoutElement> ();
+		LayoutElement le = _placeholder.AddComponent<LayoutElement> ();
 		le.preferredWidth = this.GetComponent<LayoutElement> ().preferredWidth;
 		le.preferredHeight = this.GetComponent<LayoutElement> ().preferredHeight;
 
 		// Set the placeholder to the same position
-		placeholder.transform.SetSiblingIndex (this.transform.GetSiblingIndex());
+		_placeholder.transform.SetSiblingIndex (this.transform.GetSiblingIndex());
 
 		// Set the return parent to the current one
-		parentToReturnTo = this.transform.parent;
+		_parentToReturnTo = this.transform.parent;
 
 		// Set also the placeholderParent to the current parent
-		placeholderParent = parentToReturnTo;
+		_placeholderParent = _parentToReturnTo;
 
 		// Set parent of the current object one level up
 		this.transform.SetParent (this.transform.parent.parent);
@@ -74,9 +74,9 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		this.transform.position = eventData.position;
 
 		//  Adjust the placeholder position depending on their x position
-		for (int i = 0; i < placeholderParent.childCount; i++) {
-			if(this.transform.position.x < placeholderParent.GetChild(i).position.x){
-				placeholder.transform.SetSiblingIndex (i);
+		for (int i = 0; i < _placeholderParent.childCount; i++) {
+			if(this.transform.position.x < _placeholderParent.GetChild(i).position.x){
+				_placeholder.transform.SetSiblingIndex (i);
 				break; ///< break if it is set once per drag
 			}
 		}
@@ -90,11 +90,11 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		if (Physics.Raycast(ray, out hit)) {
 				if (hit.collider.gameObject.CompareTag ("Player")) {
 					// MarkObject
-					hitObject = hit.collider.gameObject;
-					MarkObject(hitObject);
+					_hitObject = hit.collider.gameObject;
+					MarkObject(_hitObject);
 				} else{
 				// ClearSelection
-				if (hitObject != null) {
+				if (_hitObject != null) {
 					ClearSelection ();
 				}
 			}
@@ -110,8 +110,8 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
 	// Reset Object when Drag is not hovering anymore
 	void ClearSelection() {
-		hitObject.GetComponent<MeshRenderer> ().material.color = MarkAvailable;
-		hitObject = null;
+		_hitObject.GetComponent<MeshRenderer> ().material.color = MarkAvailable;
+		_hitObject = null;
 	}
 
 	// Called when user is finished with dragging
@@ -120,10 +120,10 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
 		// TODO Think about it
 		// set parent of the object to the variable parentToReturnTo
-		this.transform.SetParent (parentToReturnTo);
+		this.transform.SetParent (_parentToReturnTo);
 
 		// Set the position to the one from the placeholder
-		this.transform.SetSiblingIndex (placeholder.transform.GetSiblingIndex ());
+		this.transform.SetSiblingIndex (_placeholder.transform.GetSiblingIndex ());
 
 		// Block raycasts of the object again
 		GetComponent<CanvasGroup> ().blocksRaycasts = true;
@@ -132,7 +132,7 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		//EventSystem.current.RaycastAll (eventData);
 
 		// Remove the placeholder object
-		Destroy (placeholder);
+		Destroy (_placeholder);
 
 		// Reset all droppable Objects back
 		foreach (GameObject droppable in GameObject.FindGameObjectsWithTag("Player")) {
@@ -141,12 +141,12 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		}
 
 		// If the object is dropped on a valid hitObject
-		if (hitObject != null) {
-			Debug.Log ("HitObject " + hitObject);
+		if (_hitObject != null) {
+			Debug.Log ("HitObject " + _hitObject);
 			// TODO: GameObject must have a network identity to be able to work with it
 			// Call Command on the local Player
 			PlayerController p = UserInterface.GetComponent<UserInterfaceController> ().PlayerObject.GetComponent <PlayerController> ();
-			p.CmdReceiveFile (this.gameObject, p.ConnectionId ,hitObject.GetComponent<PlayerController> ().ConnectionId);
+			p.CmdReceiveFile (this.gameObject, p.ConnectionId ,_hitObject.GetComponent<PlayerController> ().ConnectionId);
 			// remove gameobject
 			//gameObject.SetActive (false);
 		}

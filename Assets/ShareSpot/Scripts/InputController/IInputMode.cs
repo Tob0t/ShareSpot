@@ -1,7 +1,7 @@
 ﻿using System;
 
 /// <summary>
-// Interface to support multiple devices
+/// Interface to support multiple devices.
 /// </summary>
 
 public interface IInputMode{

@@ -5,29 +5,35 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 
 /// <summary>
-// Adminstration to create connections between Administration panel and PlayerController
+/// Adminstration to create connections between Administration panel and PlayerController.
 /// </summary>
 public class Admin : AManager<Admin> {
 
 	#region [Public fields]
-	public GameObject CurrentTrackedPlayer; ///< Current selected Player
-	public Button[] ClientButtons; ///< Array for the buttons for all connected Clients
-	public GameObject[] ConnectedClients; ///< Array for all connected Clients
-	public GameObject ClientButtonPrefab; ///< Prefab of a Client Button for programmatically instantiation
-	public GameObject GamePanel; ///< GamePanel for controlling a Game
+	public GameObject CurrentTrackedPlayer; ///< Current selected Player.
+	public Button[] ClientButtons; ///< Array for the buttons for all connected Clients.
+	public GameObject[] ConnectedClients; ///< Array for all connected Clients.
+	public GameObject ClientButtonPrefab; ///< Prefab of a Client Button for programmatically instantiation.
+	public GameObject GamePanel; ///< GamePanel for controlling a Game.
 
-	// Global Constants
-	public int MaxClients = 10;  ///< Maximal allowed connected clients
+	// TODO: move to Global Constants?
+	public int MaxClients = 10;  ///< Maximal allowed connected clients.
 	#endregion
 
-	// Preparing Arrays
+
+	/// <summary>
+	/// Preparing Arrays.
+	/// </summary>
 	public void Start(){
 		ClientButtons = new Button[MaxClients+1];
 		ConnectedClients = new GameObject[MaxClients+1];
 	}
 
-	// Creates connection between the selected TrackedPlayer obtained from the Tracking-Server with the indicated Client
-	// who is connected to the network
+	/// <summary>
+	/// Creates connection between the selected TrackedPlayer obtained from the Tracking-Server with the indicated Client
+	/// who is connected to the network
+	/// </summary>
+	/// <param name="connectionId">Connection identifier of the client.</param>
 	public void ConnectToClient(int connectionId)
 	{
 		if (CurrentTrackedPlayer != null)
@@ -43,8 +49,8 @@ public class Admin : AManager<Admin> {
 			// Format the newly connected player
 			//ButtonClientOne.interactable = false;
 			ConnectedClients[connectionId].GetComponent<MeshRenderer>().material.color = Color.black;
-			ConnectedClients[connectionId].GetComponent<PlayerController> ().PlayerName = "Client "+connectionId;
-			ConnectedClients[connectionId].GetComponent<PlayerController> ().ConnectionId = connectionId;
+			//ConnectedClients[connectionId].GetComponent<PlayerController> ().PlayerName = "Client "+connectionId;
+			//ConnectedClients[connectionId].GetComponent<PlayerController> ().ConnectionId = connectionId;
 
 			// Show GamePanel (if its not already shown)
 			GamePanel.SetActive(true);
@@ -52,7 +58,10 @@ public class Admin : AManager<Admin> {
 
 	}
 
-	// Instantiating one Button per newly connected Client
+	/// <summary>
+	/// Instantiating one Button per newly connected Client.
+	/// </summary>
+	/// <param name="connectionId">Connection identifier of the client.</param>
 	public void AddClientButton(int connectionId){
 		// only create the Button if it is not already existing
 		if (ClientButtons [connectionId] == null) {

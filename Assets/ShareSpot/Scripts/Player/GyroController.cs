@@ -47,7 +47,11 @@ public class GyroController : MonoBehaviour
 			transform.rotation = Quaternion.Slerp (transform.rotation,
 				cameraBase * (ConvertRotation (referanceRotation * Input.gyro.attitude) * GetRotFix ()), lowPassFilterFactor);
 		}
+
+
 	}
+
+
 
 	protected void OnGUI()
 	{
@@ -103,9 +107,21 @@ public class GyroController : MonoBehaviour
 	#region [Public methods]
 
 	/// <summary>
+	/// Recalibrating device to face the opposite wall.
+	/// <param name="initialRotation">The initial rotation after the recalibration.</param>
+	/// </summary>
+	public void Recalibrate(int initialRotation)
+	{
+		//transform.rotation = Quaternion.identity;
+		transform.rotation = Quaternion.Euler(0, initialRotation, 0);
+		AttachGyro ();
+	}
+
+
+	/// <summary>
 	/// Attaches gyro controller to the transform.
 	/// </summary>
-	private void AttachGyro()
+	public void AttachGyro()
 	{
 		gyroEnabled = true;
 		ResetBaseOrientation();

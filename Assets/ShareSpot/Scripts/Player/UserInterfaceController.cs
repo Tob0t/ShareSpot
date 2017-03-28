@@ -3,30 +3,32 @@ using System.Collections;
 using UnityEngine.UI;
 
 /// <summary>
-/// UserInterfaceController is responsible for all the interactions between the user and the device
+/// UserInterfaceController is responsible for all the interactions between the user and the device.
 /// </summary>
 public class UserInterfaceController : MonoBehaviour {
 
-	public GameObject PlayerObject;	///< Associated PlayerObject which gets the instructions
-	public GameObject UI_StartupPanel;	///< Startup Userinterfaces
-	public GameObject UI_Wait;	///< Wait Userinterface
-	public GameObject UI_SharingModePanel;	///< SharingMode Userinterface
-	public GameObject UI_DragNDropPanel;	///< DragNDrop Userinterface
-	public GameObject UI_SwipeShotPanel;	///< SwipeShot Userinterface
-	public GameObject UI_TouchNChuckPanel;	///< TouchNChuck Userinterface
-	public GameObject UI_FileIncomingPanel;	///< Incoming File Userinterface
-	public GameObject UI_GamePanel;	///< Game Userinterface
-	public GameObject UI_GameStartPanel;	///< GameStart Userinterface
-	public GameObject UI_ErrorPanel;	///< Error Userinterface
-	public GameObject UI_SuccessPanel;	///< Success Userinterface
-	public GUISkin CustomGuiSkin;	///< Custom Skin for designing the Buttons
-	public string PlayerName;	///< The name of the associated player
-	public Text ChallengeDescription;	///< Text for the description of a new challenge
+	#region [Public fields]
+	public GameObject PlayerObject;	///< Associated PlayerObject which gets the instructions.
+	public GameObject UI_StartupPanel;	///< Startup Userinterfaces.
+	public GameObject UI_Wait;	///< Wait Userinterface.
+	public GameObject UI_SharingModePanel;	///< SharingMode Userinterface.
+	public GameObject UI_DragNDropPanel;	///< DragNDrop Userinterface.
+	public GameObject UI_SwipeShotPanel;	///< SwipeShot Userinterface.
+	public GameObject UI_TouchNChuckPanel;	///< TouchNChuck Userinterface.
+	public GameObject UI_FileIncomingPanel;	///< Incoming File Userinterface.
+	public GameObject UI_GamePanel;	///< Game Userinterface.
+	public GameObject UI_GameStartPanel;	///< GameStart Userinterface.
+	public GameObject UI_ErrorPanel;	///< Error Userinterface.
+	public GameObject UI_SuccessPanel;	///< Success Userinterface.
+	public GUISkin CustomGuiSkin;	///< Custom Skin for designing the Buttons.
+	public string PlayerName;	///< The name of the associated player.
+	public Text ChallengeDescription;	///< Text for the description of a new challenge.
 
-	public GameObject IncomingFile; ///< GameObject of any incoming file
+	public GameObject IncomingFile; ///< GameObject of any incoming file.
 
-	public GameObject GameManager;
+	public GameObject GameManager;	///< Reference to the GameManger.
 
+	#endregion
 
 
 	// Use this for initialization
@@ -35,17 +37,31 @@ public class UserInterfaceController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
+	}
+
+	/// <summary>
+	/// Changes the name of the player by calling a command on the server.
+	/// </summary>
+	/// <param name="newName">New name.</param>
+	public void ChangeName(string newName){
+		if (PlayerObject != null) {
+			PlayerObject.GetComponent<PlayerController> ().CmdChangeName (newName);
+		}
+	}
+
+	/// <summary>
+	/// Adds reference to the player controller.
+	/// </summary>
+	/// <param name="callingPlayerObject">Calling player object.</param>
+	public void AddPlayerController(GameObject callingPlayerObject){
+		// Setting the ControlledPlayer object
+		PlayerObject = callingPlayerObject;
 	}
 
 	/// <summary>
 	/// Initial setup, only done once.
 	/// </summary>
-	/// <param name="CallingGameObject">Calling game object which asked for inital setup.</param>
-	public void InitialSetup(GameObject CallingGameObject){
-
-		// Setting the ControlledPlayer object
-		PlayerObject = CallingGameObject;
+	public void InitialSetup(){
 
 		// Disable previous UI Panels
 		UI_Wait.SetActive (false);
@@ -207,7 +223,7 @@ public class UserInterfaceController : MonoBehaviour {
 	}
 
 	/// <summary>
-	/// Raises the GU event.
+	/// Raises the GUI event.
 	/// </summary>
 	void OnGUI(){
 		// only call the GUI if it there is a PlayerObject already existing
@@ -220,11 +236,15 @@ public class UserInterfaceController : MonoBehaviour {
 		// TODO: Create Panel on UI
 		// Only if there is no Mode selected show the UI for changing the name
 		if (!UI_DragNDropPanel.activeSelf && !UI_SwipeShotPanel.activeSelf && !UI_TouchNChuckPanel.activeSelf) {
-			PlayerName = GUI.TextField (new Rect (Screen.width - 425, Screen.height - 250, 400, 200), PlayerName);
+			// TODO: Remove or keep?
+			/*PlayerName = GUI.TextField (new Rect (Screen.width - 425, Screen.height - 250, 400, 200), PlayerName);
 
 			if (GUI.Button (new Rect (Screen.width - 750, Screen.height - 250, 300, 200), "Change")) {
 				PlayerObject.GetComponent<PlayerController> ().CmdChangeName (PlayerName);
-			}
+			}*/
+		}
+		if (GUI.Button (new Rect (250, Screen.height - 250, 300, 200), "Calibrate")) {
+			PlayerObject.GetComponent<PlayerController> ().RecalibrateDevice ();
 		}
 	}
 
@@ -254,7 +274,7 @@ public class UserInterfaceController : MonoBehaviour {
 		ToggleFileIncomingPanel (false);
 		Debug.Log ("Name: " + IncomingFile.GetComponent<SharedFile> ().name);
 		Debug.Log ("Author: " + IncomingFile.GetComponent<SharedFile> ().Author);
-		Debug.Log ("Size: " + IncomingFile.GetComponent<SharedFile> ().size);
+		Debug.Log ("Size: " + IncomingFile.GetComponent<SharedFile> ().Size);
 	}
 
 	/// <summary>

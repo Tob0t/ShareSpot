@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine.UI;
 
 /// <summary>
-// Test Class, can be removed!
+// TODO: Test Class, can be removed!
 /// </summary>
 public class Accelerometer : MonoBehaviour {
 	

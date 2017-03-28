@@ -6,67 +6,57 @@ using UnityEngine.UI;
 using System.IO;
 
 /// <summary>
-// GameController is responsible for managing the Gameplay and only executed on the Server
+/// GameController is responsible for managing the Gameplay and mainly executed on the Server.
 /// </summary>
 public class GameController : NetworkBehaviour {
 
+	#region [Public fields]
 	[SyncVar]
-	public bool isGameActive = false;
+	public bool isGameActive = false;	///< Indicates if there is a game currently active.
 
-	public GameObject PickupPrefab;
-	public float minX = 100f;
-	public float maxX = 1820f;
-	public float minY = 80f;
-	public float maxY = 120f;
-	public float minZ = 100f;
-	public float maxZ = 980f;
+	public GameObject PickupPrefab;	///< The prefab of a pickup.
+	public Challenge[] currentChallenges;	///< Array of the current challenges of all players.
 
-	public Color[] collectingColor;
-	public Challenge[] currentChallenges;
+	// TODO: use maxRepetitions in class
+	public int MaxRepetitions = 10;	///< Amount of repetions.
 
-	public int MaxRepetitions = 10;
+	public GameObject ButtonStartGame;	///< Button to start the game.
+	public GameObject ButtonSaveData;	///< Button to persist the data to local storage.
+	public GameObject ButtonDragNDrop;	///< Button for the sharing mode DragNDrop.
+	public GameObject ButtonSwipeShot;	///< Button for the sharing mode SwipeShot.
+	public GameObject ButtonTouchNChuck;	///< Button for the sharing mode TouchNChuck.
 
-	public GameObject ButtonStartGame;
-	public GameObject ButtonSaveData;
-	public GameObject ButtonDragNDrop;
-	public GameObject ButtonSwipeShot;
-	public GameObject ButtonTouchNChuck;
+	public Text DebugGame; ///< Textbox for debugging the actions during the game.
+	#endregion
 
-	public Text DebugGame; ///< Debugging the actions during the game
+	#region [Private fields]
+	private List<Challenge>[] _allChallenges;	///< Array of all challenges saved in a list per player connection .
 
-	//private Challenge[] allChallenges;
-	private List<Challenge>[] allChallenges;
-
+	#endregion
 	// Use this for initialization
 	void Start () {
+
+		// only run on server
 		if (!isServer)
 			return;
 		// disable Start Game Button first
 		//ButtonStartGame.SetActive (false);
 
+		// init the arrays
 		currentChallenges = new Challenge[Admin.Instance.MaxClients+1];
-		allChallenges = new List<Challenge>[Admin.Instance.MaxClients+1];
-
-		collectingColor = new Color[Admin.Instance.MaxClients];
-		collectingColor [0] = Color.red;
-		collectingColor [1] = Color.green;
-		collectingColor [2] = Color.blue;
-		collectingColor [3] = Color.yellow;
-		collectingColor [4] = Color.magenta;
-		collectingColor [5] = Color.cyan;
-		collectingColor [6] = Color.white;
-		collectingColor [7] = Color.black;
-		collectingColor [8] = Color.gray;
+		_allChallenges = new List<Challenge>[Admin.Instance.MaxClients+1];
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	
 	}
-
+		
 	/// <summary>
-	// Helper function to toggle all the sharing mode buttons
+	/// Helper function to toggle all the sharing mode buttons.
 	/// </summary>
+	/// <param name="id">Identifier of the button.</param>
+	/// <param name="newValue">Indicates whether showing or hiding the button.</param>
 	private void ToggleButton(int id, bool newValue){
 		switch (id) {
 		case 0:
@@ -82,10 +72,12 @@ public class GameController : NetworkBehaviour {
 			break;
 		}
 	}
+		
 
 	/// <summary>
-	// Assign Sharing Mode to selected Player object
+	/// Assign Sharing Mode to selected player object.
 	/// </summary>
+	/// <param name="sharingMode">Indicates the type of sharing mode.</param>
 	public void AssignSharingMode(int sharingMode){
 		// OPTIONAL
 		// Get sharing method which is selected first end enable button
@@ -96,6 +88,8 @@ public class GameController : NetworkBehaviour {
 		// Disable current sharing method
 		ToggleButton (sharingMode, false);
 		*/
+
+		// Assign sharing mode to the current selected player
 		Admin.Instance.CurrentTrackedPlayer.GetComponent<PlayerController> ().SharingMode = sharingMode;
 		DebugGame.text += "Assigned SharingMode " + (SharingMode) sharingMode + " to " + Admin.Instance.CurrentTrackedPlayer.GetComponent<PlayerController> ().PlayerName +"\n";
 
@@ -104,27 +98,30 @@ public class GameController : NetworkBehaviour {
 	}
 
 	/// <summary>
-	/// Starting the game and initializing the pickups
+	/// Starting the game and initializing the pickups.
 	/// </summary>
 	public void StartGame(){
 		// Debugging on the server
 		DebugGame.text += "Start Game\n";
 		DebugGame.text += "Connected Players: "+MyNetworkManager.Instance.numPlayers +"\n";
+
+		// Set the game state to true
 		isGameActive = true;
 
 		for (int j = 0; j <= MyNetworkManager.Instance.numPlayers; j++) {
-			allChallenges [j] = new List<Challenge> ();
+			_allChallenges [j] = new List<Challenge> ();
 		}
 
 		// Loop to produce the Pickup prefabs
 		int i=0;
 		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
 			if (connectedClient != null) {
+				// Get valid area for finding random location
+				Vector3 randomLocation = new Vector3 (Random.Range (GlobalHelper.GetPickupAreaMinValues().x, GlobalHelper.GetPickupAreaMaxValues().x), Random.Range (GlobalHelper.GetPickupAreaMinValues().y, GlobalHelper.GetPickupAreaMaxValues().y), Random.Range (GlobalHelper.GetPickupAreaMinValues().z, GlobalHelper.GetPickupAreaMaxValues().z));
 				// Create the pickup from the file Prefab
-				Vector3 randomLocation = new Vector3 (Random.Range (minX, maxX), Random.Range (minY, maxY), Random.Range (minZ, maxZ));
 				GameObject pickup = (GameObject)Instantiate (PickupPrefab, randomLocation, Quaternion.identity);
 				// Add the color of the pickup to the Controller
-				pickup.GetComponent<PickupController> ().ChosenColor = collectingColor [i];
+				pickup.GetComponent<PickupController> ().ChosenColor = GlobalHelper.GetColorForPlayerId (i);
 				// Set who is allowed to see the Pickup
 				pickup.GetComponent<PickupController>().ValidForConnectionId = i;
 				// Spawn the file on the Clients
@@ -139,14 +136,14 @@ public class GameController : NetworkBehaviour {
 				connectedClient.GetComponent<PlayerController>().RpcStartGame ();	
 			}
 		}
-
-
 	}
 
 
 	/// <summary>
-	/// Create a challenge for the current player object
+	/// Create a challenge for the current player object.
 	/// </summary>
+	/// <returns>The challenge for the player object.</returns>
+	/// <param name="currentPlayer">Current player object.</param>
 	public string CreateChallenge(GameObject currentPlayer){
 		// Initially set ID to 1
 		int sharingToPlayerId = 1;
@@ -169,10 +166,10 @@ public class GameController : NetworkBehaviour {
 	}
 
 	/// <summary>
-	/// Called when the file is received to verify if challenge is successful
-	/// <param name="senderId">the player id of the sender</param>
-	/// <param name="receiverId">the player id of the receiver</param>
-	/// <returns>boolean whether the challenge is successful</returns>
+	/// Called when the file is received to verify if challenge is successful.
+	/// <param name="senderId">The player id of the sender.</param>
+	/// <param name="receiverId">The player id of the receiver.</param>
+	/// <returns>State whether the challenge is successful.</returns>
 	/// </summary>
 	public bool VerifyChallenge(int senderId, int receiverId){
 		// Get Challenge from the stored ones
@@ -182,11 +179,10 @@ public class GameController : NetworkBehaviour {
 		if (receiverId == c.GetReceiverId()) {
 			// Save the endtime and calculate the reaction time
 			c.SetEndTime (Time.time);
-			Debug.Log ("Reaction time was: "+c.CalculateReactionTime());
 			DebugGame.text += "Reaction time was: " + c.CalculateReactionTime ()+"\n";
 
 			// Store/Persist Challenge
-			allChallenges[senderId].Add(c);
+			_allChallenges[senderId].Add(c);
 
 			// Challenge finished successfully and return true
 			return true;
@@ -198,19 +194,23 @@ public class GameController : NetworkBehaviour {
 	}
 
 	/// <summary>
-	/// Persist the data of all challenges on the local file system
+	/// Persist the data of all challenges on the local file system.
 	/// </summary>
 	public void SaveData(){
 
+		// Get data path
 		string currentDataPath = Application.persistentDataPath +"/Challenges_"+System.DateTime.Now.ToString("yyyyMMdd_HHmmss")+".json";
 		Debug.Log ("Saving file to " + currentDataPath);
 		DebugGame.text = "Saving file to " + currentDataPath;
 
+		// Write data from the allChallenges List to file
 		FileStream file = File.Create (currentDataPath);
 		for (int i = 0; i <= MyNetworkManager.Instance.numPlayers; i++) {
-			string challenges =JsonHelper.ToJson (allChallenges[i].ToArray(), true);
+			string challenges =JsonHelper.ToJson (_allChallenges[i].ToArray(), true);
 			file.Write ( System.Text.Encoding.UTF8.GetBytes(challenges), 0,  System.Text.Encoding.UTF8.GetBytes(challenges).Length);
 		}
+
+		// Close file
 		file.Close ();
 	}
 }

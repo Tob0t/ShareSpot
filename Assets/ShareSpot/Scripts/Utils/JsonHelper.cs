@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections;
 /// <summary>
-/// Helper to serialize Classes with Arrays easier
+/// Helper class to serialize classes with arrays easier.
 /// </summary>
 public static class JsonHelper
 {

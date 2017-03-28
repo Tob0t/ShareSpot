@@ -3,73 +3,80 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.EventSystems;
 
+/// <summary>
+/// Class for controlling SwipeShot behaviour.
+/// </summary>
 public class SwipeShot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
 
-	public float ForceFactor = 1f;
-	public GameObject UserInterface;
+	#region [Public fields]
+	public float ForceFactor = 1f;	///< Force factor for the shot file
+	public GameObject UserInterface;	///< Reference to the user interface of the player
 
-	public Color NormalStartColor = Color.white;
-	public Color BeginDragColor = Color.yellow;
-	public Color EndDragColor = Color.green;
+	public Color NormalStartColor = Color.white;	///< Color of the normal state of the panel
+	public Color BeginDragColor = Color.yellow;	///< Color of the begin drag state of the panel
+	public Color EndDragColor = Color.green;	///< Color of the end drag state of the panel
 
-	private float startTime;
-	private Vector2 startPos;
+	#endregion
 
-	// Called when user starts to drag something
+	#region [Private fields]
+	private float _startTime;	///< Time when the drag is started
+	private Vector2 _startPos;	///< Position when the drag is started
+
+	#endregion
+
+	/// <summary>
+	/// Called when user starts to drag something.
+	/// </summary>
+	/// <param name="eventData">Event data of the current pointer.</param>
 	public void OnBeginDrag(PointerEventData eventData){
 		GetComponent<Image> ().color = BeginDragColor;
-		startTime = Time.time;
-		startPos = eventData.position;
-		Debug.Log ("startPos: " + startPos.ToString());
+		_startTime = Time.time;
+		_startPos = eventData.position;
+		Debug.Log ("startPos: " + _startPos.ToString());
 	}
-
-	// Called during dragging
+		
+	/// <summary>
+	/// Called during dragging.
+	/// </summary>
+	/// <param name="eventData">Event data of the current pointer.</param>
 	public void OnDrag(PointerEventData eventData){
 	}
-
-	// Called when user is finished with dragging
+		
+	/// <summary>
+	/// Called when user is finished with dragging.
+	/// </summary>
+	/// <param name="eventData">Event data of the current pointer.</param>
 	public void OnEndDrag(PointerEventData eventData){
-		GetComponent<Image> ().color = EndDragColor;
+		// Get position and calculate vector between start and end position
 		Vector2 endPos = eventData.position;
-		Vector2 diff = endPos - startPos;
-		Debug.Log ("diff: "+diff.ToString());
+		Vector2 diff = endPos - _startPos;
+
+		// Change color of the panel to endDragColor
+		GetComponent<Image> ().color = EndDragColor;
+
+		// Create force determined from the difference vector
 		Vector3 force = new Vector3 (diff.x, 0, diff.magnitude);
-		Debug.Log ("force: "+force.ToString());	
-		force /= (Time.time - startTime);
+		//Debug.Log ("force: "+force.ToString());	
+
+		// Cut the force depending on the time needed for the drag
+		force /= (Time.time - _startTime);
+
+		// Start the SwipeShot on the user interface
 		UserInterface.GetComponent<UserInterfaceController>().SwipeShot(force * ForceFactor);
-		//GetComponent<SwipeShotDemo>().SwipeShot(force*ForceFactor);
+
+		// Start coroutine to wait for some seconds until changing back the color of the panel
 		StartCoroutine ("WaitSeconds");
+
+		// TODO: Show confirmation log when hiting an object.
 	}
-
-
-
-	// Coroutine to wait for 4 seconds
+		
+	/// <summary>
+	/// Coroutine to wait for 4 seconds.
+	/// </summary>
+	/// <returns>The seconds to wait for.</returns>
 	IEnumerator WaitSeconds(){
 		yield return new WaitForSeconds(4f);
 		GetComponent<Image> ().color = NormalStartColor;
 	}
-
-	/*
-	void OnMouseDown() {
-		startTime = Time.time;
-		startPos = Input.mousePosition;
-		Debug.Log ("startPos: " + startPos.ToString());
-	}
-
-	void OnMouseUp() {
-		Vector2 endPos = Input.mousePosition;
-		Vector2 diff = endPos - startPos;
-		Debug.Log ("diff: "+diff.ToString());
-		Vector3 force = new Vector3 (diff.x, 0, diff.magnitude);
-		Debug.Log ("force: "+force.ToString());	
-		force /= (Time.time - startTime);
-		//GetComponent<Rigidbody> ().constraints = RigidbodyConstraints.FreezeRotation;
-		//GetComponent<Rigidbody> ().AddRelativeForce (force * ForceFactor);
-		GetComponentInParent<PlayerController> ().CmdShootFile (force * ForceFactor);
-		ReturnBall();
-	}
-	*/
-
-
 }
 

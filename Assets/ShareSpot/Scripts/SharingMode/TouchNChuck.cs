@@ -3,29 +3,29 @@ using System.Collections;
 using UnityEngine.UI;
 
 /// <summary>
-/// Class for controlling TouchNChuck Behaviour
+/// Class for controlling TouchNChuck Behaviour.
 /// </summary>
 public class TouchNChuck : MonoBehaviour {
 
 	#region [Public fields]
-	public float LongPressTrigger = 0.5f; ///< Threshold for a long press
-	public float ChuckingThresholdZ = 0.7f; ///< Threshold of movment in z-direction
-	public GameObject UserInterface; ///< Reference to user interface
-	public Text Instructions;	///< Text for the giving instructions
-	public string InitInstructions = "Select a player with a longpress"; ///< initial instructions in textbox
-	public string ChuckInstructions = "Chuck your device if you want to share with "; ///< chucking instructions in textbox
-	public GameObject FilteToShare; ///< Reference to the file to share
+	public float LongPressTrigger = 0.5f; ///< Threshold for a long press.
+	public float ChuckingThresholdZ = 0.7f; ///< Threshold of movment of the device in z-direction.
+	public GameObject UserInterface; ///< Reference to the user interface.
+	public Text Instructions;	///< Text for giving instructions.
+	public string InitInstructions = "Select a player with a longpress"; ///< Initial instructions in textbox.
+	public string ChuckInstructions = "Chuck your device if you want to share with "; ///< Chucking instructions in textbox.
+	public GameObject FileToShare; ///< Reference to the file to share.
 
 	#endregion
 
 	#region [Private fields]
-	private GameObject hitObject; ///< the hitobject which is marked
-	private float TouchTimeStart; ///< Saving the start of a touch
-	private bool camFrozen = false; ///< current state of the camera stream, set it initially to false
+	private GameObject _hitObject; ///< The hitobject which is marked.
+	private float _touchTimeStart; ///< Saving the start time of a touch.
+	private bool _camFrozen = false; ///< Current state of the camera stream, set it initially to false.
 
-	// private vars needed for saving the current camera when freezing it
-	private CameraClearFlags currentFlags; ///< current Flags of the camera
-	private int currentCullingMask; ///< current culling Mask of the camera
+	// camera variables needed for saving the current camera when freezing it
+	private CameraClearFlags _currentFlags; ///< The current flags of the camera.
+	private int currentCullingMask; ///< The current culling mask of the camera.
 
 	#endregion
 
@@ -44,7 +44,7 @@ public class TouchNChuck : MonoBehaviour {
 			Touch touch = Input.touches [0];
 
 			// check if cam is already frozen
-			if (!camFrozen) {
+			if (!_camFrozen) {
 
 				// Convert touched point on device screen to the virtual environment
 				Ray ray = Camera.main.ScreenPointToRay (touch.position);
@@ -59,24 +59,26 @@ public class TouchNChuck : MonoBehaviour {
 						// Find out the current touch phase
 						// If the touch phase just started save the current time
 						if (touch.phase == TouchPhase.Began) {
-							TouchTimeStart = Time.time;
+							_touchTimeStart = Time.time;
 						}
 
 						// If the touch is on a constant point
 						if (touch.phase == TouchPhase.Stationary) {
 
-							// Compare the current time with the start time and check if its greater than a long press
-							if (Time.time - TouchTimeStart > LongPressTrigger) {
+							// Compare the current time with the start time and check if it is a long press
+							if (Time.time - _touchTimeStart > LongPressTrigger) {
 
 								// set the hit object ot the pressed one
-								hitObject =  hit.collider.gameObject;
+								_hitObject =  hit.collider.gameObject;
 
 								// Change the instructions text field
-								Instructions.text = ChuckInstructions + hitObject.GetComponent<PlayerController>().PlayerName;
+								Instructions.text = ChuckInstructions + _hitObject.GetComponent<PlayerController>().PlayerName;
 
 								// Start the coroutine to freeze the camera and set the boolean to true
 								StartCoroutine (FreezeCam ());
-								camFrozen = true;
+
+								// TODO: Move maybe to coroutine? Testing!!!
+								_camFrozen = true;
 							}
 						}
 					}
@@ -95,7 +97,7 @@ public class TouchNChuck : MonoBehaviour {
 
 					// Call Command on the local Player
 					PlayerController p = UserInterface.GetComponent<UserInterfaceController> ().PlayerObject.GetComponent <PlayerController> ();
-					p.CmdReceiveFile (FilteToShare, p.ConnectionId ,hitObject.GetComponent<PlayerController> ().ConnectionId);
+					p.CmdReceiveFile (FileToShare, p.ConnectionId ,_hitObject.GetComponent<PlayerController> ().ConnectionId);
 				}
 				// if the touch phase is ended also unfreeze the camera and reset the instructions text
 				if (touch.phase == TouchPhase.Ended) {
@@ -106,13 +108,18 @@ public class TouchNChuck : MonoBehaviour {
 
 		}
 	}
-
+		
 	/// <summary>
-	/// Enumerator to freeze the camera
+	/// Enumerator to freeze the camera.
 	/// </summary>
+	/// <returns>Returns null to jump to next frame.</returns>
 	IEnumerator FreezeCam(){
 		//yield return null;
-		currentFlags = Camera.main.clearFlags;
+
+		// change color of instructions to black
+		GetComponentInChildren<Text>().color = Color.black;
+
+		_currentFlags = Camera.main.clearFlags;
 		currentCullingMask = Camera.main.cullingMask;
 
 		Camera.main.clearFlags = CameraClearFlags.Nothing;
@@ -121,13 +128,18 @@ public class TouchNChuck : MonoBehaviour {
 	}
 
 	/// <summary>
-	/// Enumerator to unfreeze the camera
+	/// Enumerator to unfreeze the camera.
 	/// </summary>
+	/// <returns>Return null to jump to the next frame.</returns>
 	IEnumerator UnfreezeCam(){
-		Camera.main.clearFlags = currentFlags;
+		Camera.main.clearFlags = _currentFlags;
 		yield return null;
 		Camera.main.cullingMask = currentCullingMask;
-		camFrozen = false;
+
+		// change color of instructions back to white
+		GetComponentInChildren<Text>().color = Color.white;
+
+		_camFrozen = false;
 	}
 
 

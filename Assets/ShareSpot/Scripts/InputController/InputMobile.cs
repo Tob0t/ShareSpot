@@ -6,18 +6,24 @@ using System.Collections;
 /// </summary>
 public class InputMobile: IInputMode{
 
-	// Returns Key for Fire
+	/// <summary>
+	/// Returns Key for Fire.
+	/// </summary>
 	public bool Fire() {
 		return Input.GetMouseButtonDown (0);
 	}
 
-	// Returns Keys for Turning
+	/// <summary>
+	/// Returns Keys for Turning.
+	/// </summary>
 	public float Turn ()
 	{
 		return Input.GetAxis ("Horizontal");
 	}
 
-	// Returns Keys for Moving
+	/// <summary>
+	/// Returns Keys for Moving.
+	/// </summary>
 	public float Move ()
 	{
 		return Input.GetAxis ("Vertical");
