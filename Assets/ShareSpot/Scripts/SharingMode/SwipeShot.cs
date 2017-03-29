@@ -67,7 +67,6 @@ public class SwipeShot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		// Start coroutine to wait for some seconds until changing back the color of the panel
 		StartCoroutine ("WaitSeconds");
 
-		// TODO: Show confirmation log when hiting an object.
 	}
 		
 	/// <summary>

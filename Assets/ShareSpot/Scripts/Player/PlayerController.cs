@@ -30,7 +30,7 @@ public class PlayerController : NetworkBehaviour{
 	public GameObject ControllingPlayer;	///< The reference to the TrackedPlayer who is forwarding the position data.
 	public GameObject FilePrefab;	///< The prefab of a file object.
 	public Transform FileSpawn;	///< The location of the the spawn of a file.
-	public float ShootingSpeed = 0.01f;	///< The shoothing speed of a file.
+	public float ShootingSpeed = 0.1f;	///< The shoothing speed of a file.
 	public int PlayerSpeed;	///< The speed of the player when moving manually (only for debugging reasons).
 
 	public GameObject GameManager; ///< Reference to the GameManger.
@@ -47,6 +47,7 @@ public class PlayerController : NetworkBehaviour{
 	private bool initialSetup;	///< Boolean indicating whether the initial setup has already been done.
 	private UserInterfaceController _userInterfaceController;	///< A reference to the player user interface
 	private GameObject ARCamera;	///< A reference to the ARCamera object
+	private GameObject _localPickup; ///< Reference to the local pickup to collect for game mode
 
 	#endregion
 
@@ -60,11 +61,12 @@ public class PlayerController : NetworkBehaviour{
 			// create Reference to the game manager
 			GameManager = GameObject.FindGameObjectWithTag ("GameManager");
 
-			// Set the name of the transform
+			// Set the name
 			transform.name = "Client #" + connectionToClient.connectionId;
+			PlayerName = "Client " + connectionToClient.connectionId;
 
 			// only add the connected client and button if there are not more than @param MaxClients
-			if (connectionToClient.connectionId <= Admin.Instance.MaxClients) {
+			if (connectionToClient.connectionId <= GlobalHelper.MaxClients) {
 				Admin.Instance.ConnectedClients [connectionToClient.connectionId] = gameObject;
 				ConnectionId = connectionToClient.connectionId;
 			}
@@ -94,13 +96,15 @@ public class PlayerController : NetworkBehaviour{
 
 	// Update is called once per frame
 	void Update () {
-		// Set PlayerName from Textfield
-		this.GetComponentInChildren<TextMesh>().text = PlayerName;
+		
 
 		// only called if there is already a connection to a tracked player (set by admin)
 		if (HasControllingPlayer) {
 			// show player layover
 			transform.GetComponent<MeshRenderer>().enabled = true;
+
+			// Set PlayerName from Textfield
+			this.GetComponentInChildren<TextMesh>().text = PlayerName;
 
 			#region Client
 			// only called if its the localPlayer (Client)
@@ -108,7 +112,7 @@ public class PlayerController : NetworkBehaviour{
 
 				// Check if initial setup is already done
 				if (!initialSetup) {
-					RecalibrateDevice();
+					RecalibrateDevice(0);
 
 					// Create Initial Setup
 					_userInterfaceController.InitialSetup();
@@ -163,10 +167,13 @@ public class PlayerController : NetworkBehaviour{
 	/// <summary>
 	/// Recalibrates the device facing the oposite wall.
 	/// </summary>
-	public void RecalibrateDevice(){
-		ARCamera.GetComponent<GyroController> ().Recalibrate (0);
+	/// <param name="angle">Angle in degrees.</param>
+	public void RecalibrateDevice(int angle){
+		ARCamera.GetComponent<GyroController> ().Recalibrate (angle);
 	}
 
+
+	#region Server Commands
 	/// <summary>
 	/// Command executed on the server for shooting a SharedFile.
 	/// </summary>
@@ -188,8 +195,8 @@ public class PlayerController : NetworkBehaviour{
 		// Spawn the file on the Clients
 		NetworkServer.Spawn(sharedFile);
 
-		// Destroy the file after 30 seconds
-		Destroy(sharedFile, 30.0f);
+		// Destroy the file after 10 seconds
+		Destroy(sharedFile, 10.0f);
 	}
 
 	/// <summary>
@@ -208,11 +215,14 @@ public class PlayerController : NetworkBehaviour{
 	/// </summary>
 	[Command]
 	public void CmdPickupCollected(GameObject pickup){
-		Debug.Log ("Move Pickup");
+		//_localPickup = pickup;
+		Debug.Log ("Pickup Collected");
 		CollectedPickups++;
 		if (CollectedPickups % ShowChallengesRate == 0) {
 			string description = GameManager.GetComponent<GameController> ().CreateChallenge (gameObject);
 			RpcShowChallenge (description);
+			// TODO: set pickup invisible when a challenge is currently running, maybe at rcp and not server?
+			//_localPickup.SetActive (false);
 		}
 		// Get valid area for finding random location
 		Vector3 randomLocation = new Vector3 (Random.Range (GlobalHelper.GetPickupAreaMinValues().x, GlobalHelper.GetPickupAreaMaxValues().x), Random.Range (GlobalHelper.GetPickupAreaMinValues().y, GlobalHelper.GetPickupAreaMaxValues().y), Random.Range (GlobalHelper.GetPickupAreaMinValues().z, GlobalHelper.GetPickupAreaMaxValues().z));
@@ -225,11 +235,9 @@ public class PlayerController : NetworkBehaviour{
 	/// <param name="senderId">The player id of the sender.</param>
 	/// <param name="receiverId">The player id of the receiver.</param>
 	/// </summary>
-	// TODO Show file (change to SharedFile instead of GameObject?
+	// TODO Show file (change to SharedFile instead of GameObject?)
 	[Command]
 	public void CmdReceiveFile(GameObject file, int senderId, int receiverId){
-		Debug.Log ("Sender ID :" + senderId);
-		Debug.Log ("ReceiverId ID :" + receiverId);
 		bool challengeState = false;
 
 		// Check if there is a game currently running
@@ -243,6 +251,24 @@ public class PlayerController : NetworkBehaviour{
 		// Forward to sending client that the file was sent
 		Admin.Instance.ConnectedClients [senderId].GetComponent<PlayerController> ().RpcFileSent (challengeState);
 	}
+
+	/// <summary>
+	/// Command to verify if the right client is receiving the file.
+	/// </summary>
+	/// <param name="file">File which was sent.</param>
+	/// <param name="receiverId">Identifier of the receiving client.</param>
+	[Command]
+	public void CmdVerifyReceiver(GameObject file, int receiverId){
+		// extract the name of the receveing client
+		string name = Admin.Instance.ConnectedClients [receiverId].GetComponent<PlayerController> ().PlayerName;
+
+		// Call the rpc on the sender verifying if it is the right receiver
+		Admin.Instance.ConnectedClients [file.GetComponent<SharedFile>().SourceId].GetComponent<PlayerController> ().RpcVerifyReceiver (file, receiverId, name);
+	}
+
+	#endregion
+
+	#region Client Rpcs
 		
 	/// <summary>
 	/// ClientRpc executed on the client for feedback of a sent file.
@@ -301,14 +327,40 @@ public class PlayerController : NetworkBehaviour{
 	}
 
 	/// <summary>
+	/// ClientRpc to verify the receiver.
+	/// </summary>
+	/// <param name="file">File which was sent.</param>
+	/// <param name="receiverId">Identifier of the receiving client.</param>
+	/// <param name="playerName">Player name of the receiving client.</param>
+	[ClientRpc]
+	public void RpcVerifyReceiver (GameObject file, int receiverId, string playerName){
+		// Show the verify Panel on the local Player
+		if(isLocalPlayer){
+			_userInterfaceController.ShowVerifyReceiverPanel (file, receiverId, playerName);
+		}
+	}
+
+	/// <summary>
+	/// Called when a file is received and triggers an action on the receiving player.
+	/// Only available if there is no game running.
+	/// </summary>
+	/// <param name="file">The file which was sent.</param>
+	[ClientRpc]
+	public void RpcReceiveFile(GameObject file){
+		if (isLocalPlayer) {
+			_userInterfaceController.ShowIncomingFile (file);
+		}
+	}
+
+	#endregion
+
+	/// <summary>
 	/// Show trigger when local player receives physically a file (called by localPlayer).
-	/// For game not needed
 	/// <param name="file">The file to receive.</param>
 	/// </summary>
 	public void ReceiveFile(GameObject file){
 		if (isLocalPlayer) {
-
-			CmdReceiveFile(file, file.GetComponent<SharedFile>().SourceId, ConnectionId);
+			CmdVerifyReceiver(file, ConnectionId);
 
 			// TODO: not needed right?
 			// Show incoming file on the local client on the receiver only if the game is not active
@@ -317,6 +369,7 @@ public class PlayerController : NetworkBehaviour{
 			}*/
 		}
 	}
+
 		
 	/// <summary>
 	/// When the player object is colliding with another object.
@@ -354,19 +407,5 @@ public class PlayerController : NetworkBehaviour{
 		yield return new WaitForSeconds(4f);
 		gameObject.GetComponent<MeshRenderer> ().material.color = current;
 	}
-	
-
-	/// <summary>
-	/// Called when a file is received and triggers an action on the receiving player.
-	/// Only available if there is no game running.
-	/// </summary>
-	/// <param name="file">The file which was sent.</param>
-	[ClientRpc]
-	public void RpcReceiveFile(GameObject file){
-		if (isLocalPlayer) {
-			_userInterfaceController.ShowIncomingFile (file);
-		}
-	}
-
 
 }

@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class GlobalHelper{
 
+
+	public static int MaxClients = 10;  ///< Maximal allowed clients to connect at the same time.
+	public static int MaxRepetitions = 10;	///< Amount of repetions in the game mode. // TODO: using or deleting?
+
 	/// <summary>
 	/// Defining the area of the possible location of a pickup.
 	/// </summary>

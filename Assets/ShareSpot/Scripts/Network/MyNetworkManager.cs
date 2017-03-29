@@ -111,7 +111,7 @@ public class MyNetworkManager : NetworkManager {
 		base.OnServerConnect(conn);
 		// TODO: is it necessary here?
 		// only add the connected client and button if there are not more than @param MaxClients
-		if (conn.connectionId <= Admin.Instance.MaxClients) {
+		if (conn.connectionId <= GlobalHelper.MaxClients) {
 			Admin.Instance.AddClientButton(conn.connectionId);
 		}
 		toggleClientPanel (conn, true);
@@ -126,7 +126,9 @@ public class MyNetworkManager : NetworkManager {
 	public override void OnServerDisconnect(NetworkConnection conn)
 	{
 		// show the template of a tracked player if the client is not connected anymore
-		Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.SetActive (true);
+		if (Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().HasControllingPlayer) {
+			Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.SetActive (true);
+		}
 		toggleClientPanel (conn, false);
 		DebugTextClient.text += "Client " + conn.connectionId + " disconnected.\n";
 		base.OnServerDisconnect(conn);

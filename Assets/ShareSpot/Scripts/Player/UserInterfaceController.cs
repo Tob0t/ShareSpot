@@ -12,9 +12,12 @@ public class UserInterfaceController : MonoBehaviour {
 	public GameObject UI_StartupPanel;	///< Startup Userinterfaces.
 	public GameObject UI_Wait;	///< Wait Userinterface.
 	public GameObject UI_SharingModePanel;	///< SharingMode Userinterface.
+	public GameObject UI_CalibrationModePanel;	///< CalibrationMode Userinterface.
+	public GameObject UI_CalibrationTogglePanel;	///< CalibrationToggle Userinterface.
 	public GameObject UI_DragNDropPanel;	///< DragNDrop Userinterface.
 	public GameObject UI_SwipeShotPanel;	///< SwipeShot Userinterface.
 	public GameObject UI_TouchNChuckPanel;	///< TouchNChuck Userinterface.
+	public GameObject UI_VerifyReceiverPanel;	///< Verify Receiver Userinterface.
 	public GameObject UI_FileIncomingPanel;	///< Incoming File Userinterface.
 	public GameObject UI_GamePanel;	///< Game Userinterface.
 	public GameObject UI_GameStartPanel;	///< GameStart Userinterface.
@@ -23,10 +26,18 @@ public class UserInterfaceController : MonoBehaviour {
 	public GUISkin CustomGuiSkin;	///< Custom Skin for designing the Buttons.
 	public string PlayerName;	///< The name of the associated player.
 	public Text ChallengeDescription;	///< Text for the description of a new challenge.
+	public Text VerifyReceiverDescription; ///< Text for verifying the receiver.
 
 	public GameObject IncomingFile; ///< GameObject of any incoming file.
 
+
 	public GameObject GameManager;	///< Reference to the GameManger.
+
+	#endregion
+
+	#region [Private fields]
+	private GameObject _sendingFile; ///< GameObject of any outcoming file.
+	private int _fileReceiverId; ///< The id of the receiver of the sending file.
 
 	#endregion
 
@@ -69,6 +80,9 @@ public class UserInterfaceController : MonoBehaviour {
 
 		// Enable SharingMode Panel
 		UI_SharingModePanel.SetActive(true);
+
+		// Enable Calibration Toggle Button
+		UI_CalibrationTogglePanel.SetActive (true);
 	}
 
 	/// <summary>
@@ -77,6 +91,14 @@ public class UserInterfaceController : MonoBehaviour {
 	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
 	public void ToggleSharingModePanel(bool newValue){
 		UI_SharingModePanel.SetActive (newValue);
+	}
+
+	/// <summary>
+	/// Toggles the Calibration panel.
+	/// </summary>
+	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
+	public void ToggleCalibrationModePanel(bool newValue){
+		UI_CalibrationModePanel.SetActive (newValue);
 	}
 
 	/// <summary>
@@ -112,15 +134,26 @@ public class UserInterfaceController : MonoBehaviour {
 	}
 
 	/// <summary>
+	/// Toggles the verify receiver panel.
+	/// </summary>
+	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
+	public void ToggleVerifyReceiverPanel(bool newValue){
+		UI_VerifyReceiverPanel.SetActive (newValue);
+	}
+
+	/// <summary>
 	/// Disables all game panels except the Startup ones.
 	/// </summary>
 	public void DisableAllGamePanels(){
 		ToggleSharingModePanel(false);
+		ToggleCalibrationModePanel (false);
 		ToggleDragNDropPanel(false);
 		ToggleSwipeShotPanel(false);
 		ToggleTouchNChuckPanel(false);
+		ToggleVerifyReceiverPanel(false);
 		ToggleFileIncomingPanel(false);
 		ToggleGamePanel (false);
+		UI_CalibrationTogglePanel.SetActive (false);
 		UI_ErrorPanel.SetActive (false);
 		UI_SuccessPanel.SetActive (false);
 	}
@@ -144,6 +177,14 @@ public class UserInterfaceController : MonoBehaviour {
 		default:
 			break;
 		}
+	}
+
+	/// <summary>
+	/// Recalibrates the device by calling function on player controller.
+	/// </summary>
+	/// <param name="angle">Angle in degrees.</param>
+	public void RecalibrateDevice(int angle){
+		PlayerObject.GetComponent<PlayerController> ().RecalibrateDevice (angle);
 	}
 		
 
@@ -236,15 +277,11 @@ public class UserInterfaceController : MonoBehaviour {
 		// TODO: Create Panel on UI
 		// Only if there is no Mode selected show the UI for changing the name
 		if (!UI_DragNDropPanel.activeSelf && !UI_SwipeShotPanel.activeSelf && !UI_TouchNChuckPanel.activeSelf) {
-			// TODO: Remove or keep?
 			/*PlayerName = GUI.TextField (new Rect (Screen.width - 425, Screen.height - 250, 400, 200), PlayerName);
 
 			if (GUI.Button (new Rect (Screen.width - 750, Screen.height - 250, 300, 200), "Change")) {
 				PlayerObject.GetComponent<PlayerController> ().CmdChangeName (PlayerName);
 			}*/
-		}
-		if (GUI.Button (new Rect (250, Screen.height - 250, 300, 200), "Calibrate")) {
-			PlayerObject.GetComponent<PlayerController> ().RecalibrateDevice ();
 		}
 	}
 
@@ -283,6 +320,33 @@ public class UserInterfaceController : MonoBehaviour {
 	public void DeclineIncomingFile(){
 		Debug.Log ("Incoming File declined");
 		ToggleFileIncomingPanel (false);
+	}
+
+
+	/// <summary>
+	/// Activates a panel to show the verify receiver panel.
+	/// </summary>
+	/// <param name="file">File to sent.</param>
+	/// <param name="receiverId">Iidentifier of the receiving client.</param>
+	/// <param name="playerName">Player name of the receiving client.</param>
+	public void ShowVerifyReceiverPanel(GameObject file, int receiverId, string playerName){
+		_sendingFile = file;
+		_fileReceiverId = receiverId;
+		VerifyReceiverDescription.text = "Sharing file with " + playerName + "?";
+		ToggleVerifyReceiverPanel (true);
+	}
+
+	/// <summary>
+	/// Verifies the receiver.
+	/// </summary>
+	/// <param name="success">If set to <c>true</c> the positive button was clicked.</param>
+	public void VerifyReceiver(bool success){
+		// Disable verify receiver panel
+		ToggleVerifyReceiverPanel (false);
+		// sent command to continue with receiving client
+		if (success) {
+			PlayerObject.GetComponent<PlayerController>().CmdReceiveFile (_sendingFile, _sendingFile.GetComponent<SharedFile> ().SourceId, _fileReceiverId);
+		}
 	}
 
 }

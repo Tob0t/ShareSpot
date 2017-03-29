@@ -43,8 +43,9 @@ public class GameController : NetworkBehaviour {
 		//ButtonStartGame.SetActive (false);
 
 		// init the arrays
-		currentChallenges = new Challenge[Admin.Instance.MaxClients+1];
-		_allChallenges = new List<Challenge>[Admin.Instance.MaxClients+1];
+		//currentChallenges = new Challenge[Admin.Instance.MaxClients+1];
+		currentChallenges = new Challenge[GlobalHelper.MaxClients+1];
+		_allChallenges = new List<Challenge>[GlobalHelper.MaxClients+1];
 	}
 	
 	// Update is called once per frame

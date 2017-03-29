@@ -16,8 +16,6 @@ public class Admin : AManager<Admin> {
 	public GameObject ClientButtonPrefab; ///< Prefab of a Client Button for programmatically instantiation.
 	public GameObject GamePanel; ///< GamePanel for controlling a Game.
 
-	// TODO: move to Global Constants?
-	public int MaxClients = 10;  ///< Maximal allowed connected clients.
 	#endregion
 
 
@@ -25,8 +23,8 @@ public class Admin : AManager<Admin> {
 	/// Preparing Arrays.
 	/// </summary>
 	public void Start(){
-		ClientButtons = new Button[MaxClients+1];
-		ConnectedClients = new GameObject[MaxClients+1];
+		ClientButtons = new Button[GlobalHelper.MaxClients+1];
+		ConnectedClients = new GameObject[GlobalHelper.MaxClients+1];
 	}
 
 	/// <summary>

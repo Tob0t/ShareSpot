@@ -9,7 +9,6 @@ using UnityEngine;
 public class GyroController : MonoBehaviour 
 {
 	#region [Private fields]
-
 	private bool gyroEnabled = true;
 	private const float lowPassFilterFactor = 0.2f;
 
