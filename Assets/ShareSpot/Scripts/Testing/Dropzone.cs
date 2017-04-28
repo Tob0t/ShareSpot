@@ -11,7 +11,7 @@ public class Dropzone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 		if(eventData.pointerDrag == null)
 			return;
 
-		Draggable d = eventData.pointerDrag.GetComponent<Draggable> ();
+		DragNDrop d = eventData.pointerDrag.GetComponent<DragNDrop> ();
 		if (d != null) {
 			//if (typeOfItem == d.typeOfItem || typeOfItem == Draggable.Slot.INVENTORY) {
 			///d.placeholderParent = this.transform;
@@ -36,7 +36,7 @@ public class Dropzone : MonoBehaviour, IDropHandler, IPointerEnterHandler, IPoin
 	public void OnDrop(PointerEventData eventData){
 		Debug.Log (eventData.pointerDrag + "was dropped on " + gameObject.name);
 
-		Draggable d = eventData.pointerDrag.GetComponent<Draggable> ();
+		DragNDrop d = eventData.pointerDrag.GetComponent<DragNDrop> ();
 		if (d != null) {
 			//if (typeOfItem == d.typeOfItem || typeOfItem == Draggable.Slot.INVENTORY) {
 				///d.parentToReturnTo = this.transform;

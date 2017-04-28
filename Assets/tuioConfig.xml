@@ -8,19 +8,19 @@
 		</ConfigNode>
 		<ConfigNode name="targetResolutionX">
 			<!-- in pixel -->
-			<Value>1920</Value>
+			<Value>1488</Value>
 		</ConfigNode>
 		<ConfigNode name="targetResolutionY">
 			<!-- in pixel -->
-			<Value>1080</Value>
+			<Value>1209</Value>
 		</ConfigNode>
 		<ConfigNode name="stageX">
 			<!-- horizontal in centimeter -->
-			<Value>1600</Value>
+			<Value>496</Value>
 		</ConfigNode>
 		<ConfigNode name="stageY">
 			<!-- vertical in centimeter -->
-			<Value>900</Value>
+			<Value>403</Value>
 		</ConfigNode>
 	</ConfigNodes>
 </UnityTUIOConfig>

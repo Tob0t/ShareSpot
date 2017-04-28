@@ -14,6 +14,8 @@ public class UserInterfaceController : MonoBehaviour {
 	public GameObject UI_SharingModePanel;	///< SharingMode Userinterface.
 	public GameObject UI_CalibrationModePanel;	///< CalibrationMode Userinterface.
 	public GameObject UI_CalibrationTogglePanel;	///< CalibrationToggle Userinterface.
+	public GameObject UI_AdjustDevicePositionPanel;	///< UI_AdjustDevicePositionPanel Userinterface.
+	public GameObject UI_AdjustDevicePositionTogglePanel;	///< UI_AdjustDevicePositionTogglePanel Userinterface.
 	public GameObject UI_DragNDropPanel;	///< DragNDrop Userinterface.
 	public GameObject UI_SwipeShotPanel;	///< SwipeShot Userinterface.
 	public GameObject UI_TouchNChuckPanel;	///< TouchNChuck Userinterface.
@@ -21,12 +23,15 @@ public class UserInterfaceController : MonoBehaviour {
 	public GameObject UI_FileIncomingPanel;	///< Incoming File Userinterface.
 	public GameObject UI_GamePanel;	///< Game Userinterface.
 	public GameObject UI_GameStartPanel;	///< GameStart Userinterface.
+	public GameObject UI_GamePointsPanel;	///< GamePoints Userinterface.
 	public GameObject UI_ErrorPanel;	///< Error Userinterface.
 	public GameObject UI_SuccessPanel;	///< Success Userinterface.
 	public GUISkin CustomGuiSkin;	///< Custom Skin for designing the Buttons.
 	public string PlayerName;	///< The name of the associated player.
 	public Text ChallengeDescription;	///< Text for the description of a new challenge.
 	public Text VerifyReceiverDescription; ///< Text for verifying the receiver.
+	public Text CurrentDevicePosition; ///< Current Position of the device
+	public Text PlayerPoints; ///< Current Points of the player
 
 	public GameObject IncomingFile; ///< GameObject of any incoming file.
 
@@ -81,8 +86,9 @@ public class UserInterfaceController : MonoBehaviour {
 		// Enable SharingMode Panel
 		UI_SharingModePanel.SetActive(true);
 
-		// Enable Calibration Toggle Button
+		// Enable Calibration and Device Toggle Button
 		UI_CalibrationTogglePanel.SetActive (true);
+		UI_AdjustDevicePositionTogglePanel.SetActive (true);
 	}
 
 	/// <summary>
@@ -99,6 +105,14 @@ public class UserInterfaceController : MonoBehaviour {
 	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
 	public void ToggleCalibrationModePanel(bool newValue){
 		UI_CalibrationModePanel.SetActive (newValue);
+	}
+
+	/// <summary>
+	/// Toggles the Device position panel.
+	/// </summary>
+	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
+	public void ToggleDevicePositionPanel(bool newValue){
+		UI_AdjustDevicePositionPanel.SetActive (newValue);
 	}
 
 	/// <summary>
@@ -142,18 +156,28 @@ public class UserInterfaceController : MonoBehaviour {
 	}
 
 	/// <summary>
+	/// Toggles the game points panel.
+	/// </summary>
+	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
+	public void ToggleGamePointsPanel(bool newValue){
+		UI_GamePointsPanel.SetActive (newValue);
+	}
+
+	/// <summary>
 	/// Disables all game panels except the Startup ones.
 	/// </summary>
 	public void DisableAllGamePanels(){
 		ToggleSharingModePanel(false);
 		ToggleCalibrationModePanel (false);
+		ToggleDevicePositionPanel (false);
 		ToggleDragNDropPanel(false);
 		ToggleSwipeShotPanel(false);
 		ToggleTouchNChuckPanel(false);
 		ToggleVerifyReceiverPanel(false);
 		ToggleFileIncomingPanel(false);
 		ToggleGamePanel (false);
-		UI_CalibrationTogglePanel.SetActive (false);
+		ToggleGamePointsPanel (false);
+		//UI_CalibrationTogglePanel.SetActive (false);
 		UI_ErrorPanel.SetActive (false);
 		UI_SuccessPanel.SetActive (false);
 	}
@@ -179,14 +203,70 @@ public class UserInterfaceController : MonoBehaviour {
 		}
 	}
 
+	#region[Device Calibration]
 	/// <summary>
 	/// Recalibrates the device by calling function on player controller.
 	/// </summary>
 	/// <param name="angle">Angle in degrees.</param>
 	public void RecalibrateDevice(int angle){
 		PlayerObject.GetComponent<PlayerController> ().RecalibrateDevice (angle);
+
+		// Disable the panel
+		ToggleCalibrationModePanel (false);
+
+		// Disable the toggle button programmatically
+		UI_CalibrationTogglePanel.GetComponentsInChildren<Image> () [1].color = Color.clear;
+		UI_CalibrationTogglePanel.GetComponentInChildren<Toggle> ().isOn = false;
 	}
-		
+
+
+	/// <summary>
+	/// Adjusts the height of the device location to the player.
+	/// </summary>
+	/// <param name="adjustingValue">Adjusting value in y direction.</param>
+	public void AdjustDeviceLocationHeight(float adjustingValue){
+		adjustDeviceLocation(new Vector3 (0, adjustingValue, 0));
+	}
+
+	/// <summary>
+	/// Adjusts the device location closeness to the player.
+	/// </summary>
+	/// <param name="adjustingValue">Adjusting value in z direction.</param>
+	public void AdjustDeviceLocationCloseness(float adjustingValue){
+		adjustDeviceLocation(new Vector3 (0, 0, adjustingValue));
+	}
+
+	/// <summary>
+	/// Resets the device location.
+	/// </summary>
+	public void ResetDeviceLocation(){
+		PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.localPosition = PlayerObject.GetComponent<PlayerController> ().PlayerHandInitialPos;
+		showCurrentPosition ();
+	}
+
+	/// <summary>
+	/// Adjusts the device location.
+	/// </summary>
+	/// <param name="adjustingVector">Adjusting vector.</param>
+	private void adjustDeviceLocation(Vector3 adjustingVector){
+		PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.Translate (adjustingVector,PlayerObject.transform);
+		showCurrentPosition ();
+	}
+
+	/// <summary>
+	/// Shows the current position of the players device relative to the player.
+	/// </summary>
+	private void showCurrentPosition(){
+		// scaleVector needed for calculations to cm (half of the maximum)
+		Vector3 scaleVector = new Vector3 (0, 90, 20);
+
+		// Calculate local position in cm
+		Vector3 localPositionInCm = Vector3.Scale(PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.localPosition, scaleVector) + scaleVector;
+
+		CurrentDevicePosition.text = "Current pos " + localPositionInCm.ToString();
+		//CurrentDevicePosition.text += "Abs pos " +  PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.position.ToString();
+	}
+	#endregion
 
 	/// <summary>
 	/// Toggles the game panel.
@@ -202,6 +282,8 @@ public class UserInterfaceController : MonoBehaviour {
 	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
 	public void ShowGameStartPanel(){
 		UI_GameStartPanel.SetActive (true);
+		// Show Points panel
+		ToggleGamePointsPanel(true);
 		StartCoroutine(DisableAfterSomeTime(2f));
 	}
 
@@ -210,8 +292,12 @@ public class UserInterfaceController : MonoBehaviour {
 	/// </summary>
 	/// <param name="description">Description of the new challenge.</param>
 	public void ShowNewChallenge(string description){
+		// Disable Game points during a challenge
+		ToggleGamePointsPanel (false);
+
 		ToggleGamePanel (true);
 		ChallengeDescription.text = description;
+
 	}
 
 	/// <summary>
@@ -244,6 +330,9 @@ public class UserInterfaceController : MonoBehaviour {
 
 			// Disable the sharing mode panel
 			TogglePlayersSharingModePanel(false);
+
+			// Show Points panel
+			ToggleGamePointsPanel(true);
 		} else {
 			// Show error panel
 			ShowErrorPanel ();
@@ -261,6 +350,14 @@ public class UserInterfaceController : MonoBehaviour {
 		UI_ErrorPanel.SetActive (false);
 		UI_SuccessPanel.SetActive (false);
 		UI_GameStartPanel.SetActive (false);
+	}
+
+	/// <summary>
+	/// Updates the player points on the UI.
+	/// </summary>
+	/// <param name="CollectedPickups">Amount of collected pickups.</param>
+	public void UpdatePlayerPoints (int CollectedPickups){
+		PlayerPoints.text = CollectedPickups.ToString();
 	}
 
 	/// <summary>

@@ -25,7 +25,7 @@ public class TouchNChuck : MonoBehaviour {
 
 	// camera variables needed for saving the current camera when freezing it
 	private CameraClearFlags _currentFlags; ///< The current flags of the camera.
-	private int currentCullingMask; ///< The current culling mask of the camera.
+	private int _currentCullingMask; ///< The current culling mask of the camera.
 
 	#endregion
 
@@ -120,7 +120,7 @@ public class TouchNChuck : MonoBehaviour {
 		GetComponentInChildren<Text>().color = Color.black;
 
 		_currentFlags = Camera.main.clearFlags;
-		currentCullingMask = Camera.main.cullingMask;
+		_currentCullingMask = Camera.main.cullingMask;
 
 		Camera.main.clearFlags = CameraClearFlags.Nothing;
 		yield return null;
@@ -132,10 +132,11 @@ public class TouchNChuck : MonoBehaviour {
 	/// </summary>
 	/// <returns>Return null to jump to the next frame.</returns>
 	IEnumerator UnfreezeCam(){
+		yield return null;
 		Camera.main.clearFlags = _currentFlags;
 		yield return null;
-		Camera.main.cullingMask = currentCullingMask;
-
+		Camera.main.cullingMask = _currentCullingMask;
+		yield return null;
 		// change color of instructions back to white
 		GetComponentInChildren<Text>().color = Color.white;
 

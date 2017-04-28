@@ -13,7 +13,10 @@ public class ToggleScript : Toggle{
 		if (isOn) {
 			// Disable all other toggle fields programmatically
 			foreach(Image img in this.transform.parent.gameObject.GetComponentsInChildren<Image> ()){
-				img.color = Color.clear;
+				// exclude the parent object (unity bug)
+				if (img.gameObject.GetInstanceID () != this.transform.parent.gameObject.GetInstanceID ()) {
+					img.color = Color.clear;
+				}
 			}
 			image.color = this.colors.pressedColor;
 		} else {

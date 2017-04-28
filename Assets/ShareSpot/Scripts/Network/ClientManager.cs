@@ -41,7 +41,7 @@ public class ClientManager : MonoBehaviour {
 	/// Insert the IP Address from the selected Button into the TextView and tries to connect.
 	/// </summary>
 	/// <param name="IPAddress">IP address of the TextView.</param>
-	public void InsertIPAdress(string IPAddress){
+	public void InsertIPAddress(string IPAddress){
 		ServerIpAdressInput.text = IPAddress;
 		ConnectToServer ();
 	}

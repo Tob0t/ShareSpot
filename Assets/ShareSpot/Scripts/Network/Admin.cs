@@ -16,6 +16,8 @@ public class Admin : AManager<Admin> {
 	public GameObject ClientButtonPrefab; ///< Prefab of a Client Button for programmatically instantiation.
 	public GameObject GamePanel; ///< GamePanel for controlling a Game.
 
+	public InputField NewNameTextBox;	///< TextBox for the new name.
+
 	#endregion
 
 
@@ -47,6 +49,7 @@ public class Admin : AManager<Admin> {
 			// Format the newly connected player
 			//ButtonClientOne.interactable = false;
 			ConnectedClients[connectionId].GetComponent<MeshRenderer>().material.color = Color.black;
+			// TODO: Not Needed Right?
 			//ConnectedClients[connectionId].GetComponent<PlayerController> ().PlayerName = "Client "+connectionId;
 			//ConnectedClients[connectionId].GetComponent<PlayerController> ().ConnectionId = connectionId;
 
@@ -80,5 +83,15 @@ public class Admin : AManager<Admin> {
 			// Add Buttons to ClientButtons Array
 			ClientButtons [connectionId] = ClientButton.GetComponent<Button> ();
 		}
+	}
+
+	/// <summary>
+	/// Changes the name of the player by the server interface.
+	/// </summary>
+	public void ChangeName(){
+		// Update the playername as syncvar
+		CurrentTrackedPlayer.GetComponent<PlayerController> ().PlayerName = NewNameTextBox.text;
+		// Update the name on the server button
+		Admin.Instance.ClientButtons [CurrentTrackedPlayer.GetComponent<PlayerController> ().ConnectionId].GetComponentInChildren<Text> ().text = NewNameTextBox.text;
 	}
 }

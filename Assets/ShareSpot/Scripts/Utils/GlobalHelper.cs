@@ -12,11 +12,11 @@ public class GlobalHelper{
 	/// Defining the area of the possible location of a pickup.
 	/// </summary>
 	private static float minX = 100f;
-	private static float maxX = 1820f;
-	private static float minY = 80f;
-	private static float maxY = 120f;
+	private static float maxX = 1388;
+	private static float minY = 100f;
+	private static float maxY = 400f;
 	private static float minZ = 100f;
-	private static float maxZ = 980f;
+	private static float maxZ = 1100f;
 
 	/// <summary>
 	/// List of all available colors for collecting the pickups.

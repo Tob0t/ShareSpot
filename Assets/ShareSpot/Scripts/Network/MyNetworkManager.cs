@@ -12,7 +12,8 @@ public class MyNetworkManager : NetworkManager {
 	public static MyNetworkManager Instance = null;	///< static instance of MyNetworkManager which allows it to be accessed by any other script.
 	public string ConnectionIP; ///< The IP-Address to connect to.
 	public int ConnectionPort = 7777; ///< The Port to connect to (Standard is 7777).
-	public bool ClientConnected = false; ///< Determine if a client is already connected (Standard is false).
+	// TODO not needed right?
+	//public bool ClientConnected = false; ///< Determine if a client is already connected (Standard is false).
 	public bool IsServer;	///< Determine if the caller is a Server.
 	public bool IsClient; ///< Determine if the caller is a Client.
 	public Text DebugTextClient; ///< Debugging the actions of the client.
@@ -29,7 +30,8 @@ public class MyNetworkManager : NetworkManager {
 	public GameObject ButtonStopServer; ///< Button to stop the server.
 	public GameObject GamePanel; ///< GamePanel for controlling a Game.
 
-	public bool isGameActive = false;
+	//TODO: not needed right?
+	//public bool isGameActive = false;
 
 	#endregion
 
@@ -114,7 +116,7 @@ public class MyNetworkManager : NetworkManager {
 		if (conn.connectionId <= GlobalHelper.MaxClients) {
 			Admin.Instance.AddClientButton(conn.connectionId);
 		}
-		toggleClientPanel (conn, true);
+		//toggleClientPanel (conn, true);
 		DebugTextClient.text += "Client " + conn.connectionId + " connected.\n";
 
 	}
@@ -125,13 +127,17 @@ public class MyNetworkManager : NetworkManager {
 	/// <param name="conn">Connection id of the client.</param>
 	public override void OnServerDisconnect(NetworkConnection conn)
 	{
+		
 		// show the template of a tracked player if the client is not connected anymore
 		if (Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().HasControllingPlayer) {
-			Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.SetActive (true);
+			Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.GetComponent<TrackedPlayerNetwork>().HasPlayer = false;
 		}
-		toggleClientPanel (conn, false);
+		//toggleClientPanel (conn, false);
+		Destroy(Admin.Instance.ClientButtons [conn.connectionId].gameObject);
 		DebugTextClient.text += "Client " + conn.connectionId + " disconnected.\n";
+
 		base.OnServerDisconnect(conn);
+
 	}
 
 	/// <summary>
@@ -201,6 +207,7 @@ public class MyNetworkManager : NetworkManager {
 	/// </summary>
 	public override void OnStopClient(){
 		UserInterfaceController.GetComponent<UserInterfaceController>().DisableAllGamePanels ();
+		UserInterfaceController.GetComponent<UserInterfaceController> ().UI_Wait.GetComponentInChildren<InputField> ().text = "";
 		UI_Wait.SetActive (false);
 		UI_Panel.SetActive (true);
 		UI_Setup.SetActive (true);

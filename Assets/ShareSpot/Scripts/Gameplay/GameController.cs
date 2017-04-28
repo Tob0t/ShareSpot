@@ -17,9 +17,6 @@ public class GameController : NetworkBehaviour {
 	public GameObject PickupPrefab;	///< The prefab of a pickup.
 	public Challenge[] currentChallenges;	///< Array of the current challenges of all players.
 
-	// TODO: use maxRepetitions in class
-	public int MaxRepetitions = 10;	///< Amount of repetions.
-
 	public GameObject ButtonStartGame;	///< Button to start the game.
 	public GameObject ButtonSaveData;	///< Button to persist the data to local storage.
 	public GameObject ButtonDragNDrop;	///< Button for the sharing mode DragNDrop.
@@ -127,6 +124,10 @@ public class GameController : NetworkBehaviour {
 				pickup.GetComponent<PickupController>().ValidForConnectionId = i;
 				// Spawn the file on the Clients
 				NetworkServer.Spawn (pickup);
+
+				// Set the color of the admin panel according to the players pickup color
+				Admin.Instance.ClientButtons[i].GetComponent<Image>().color = GlobalHelper.GetColorForPlayerId (i);
+				connectedClient.GetComponent<MeshRenderer> ().material.color = GlobalHelper.GetColorForPlayerId (i);
 			}
 			i++;
 		}
@@ -134,7 +135,8 @@ public class GameController : NetworkBehaviour {
 		// Start the game on each client
 		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
 			if (connectedClient != null) {
-				connectedClient.GetComponent<PlayerController>().RpcStartGame ();	
+				connectedClient.GetComponent<PlayerController>().RpcStartGame ();
+
 			}
 		}
 	}

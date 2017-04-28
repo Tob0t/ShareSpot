@@ -35,9 +35,11 @@ public class TrackedPlayerNetwork : NetworkBehaviour {
 
 		// If a device is already connected to it disable it 
 		if (HasPlayer) {
-			gameObject.SetActive (false);
+			//gameObject.SetActive (false);
+			gameObject.GetComponentInChildren<MeshRenderer> ().enabled = false;
 		} else { // otherwise enable
-			gameObject.SetActive (true);
+			//gameObject.SetActive (true);
+			gameObject.GetComponentInChildren<MeshRenderer> ().enabled = true;
 		}
 	}
 

@@ -35,18 +35,23 @@ public class PlayerController : NetworkBehaviour{
 
 	public GameObject GameManager; ///< Reference to the GameManger.
 
+	// TODO define Deviec location and adjust rotation only to that
+	public Transform DeviceLocation; ///< The location of the device relative to the player object.
+	public GameObject PlayerHand;
+	public Vector3 PlayerHandInitialPos;
+
 	#endregion
 
 	#region [Private fields]
-	private IInputMode inputMode;	///< The input mode depending wheter its mobile or computer, TODO: necessary?
+	private IInputMode _inputMode;	///< The input mode depending wheter its mobile or computer, TODO: necessary?
 	// TODO implement LERP ?
 	//private Vector3 _previousPos;	///< The previous position of the object.
 	//private float distance;	///< The distance traveled since the last frame.
 	//private float _timePassed;	///< The time passed since the last frame.
 	//private bool _staticPos;
-	private bool initialSetup;	///< Boolean indicating whether the initial setup has already been done.
+	private bool _initialSetup;	///< Boolean indicating whether the initial setup has already been done.
 	private UserInterfaceController _userInterfaceController;	///< A reference to the player user interface
-	private GameObject ARCamera;	///< A reference to the ARCamera object
+	private GameObject _ARCamera;	///< A reference to the ARCamera object
 	private GameObject _localPickup; ///< Reference to the local pickup to collect for game mode
 
 	#endregion
@@ -80,18 +85,21 @@ public class PlayerController : NetworkBehaviour{
 
 		// Find the user interface and the AR Camera object 
 		_userInterfaceController = GameObject.FindGameObjectWithTag("PlayerUserInterface").GetComponent<UserInterfaceController>();
-		ARCamera = GameObject.FindGameObjectWithTag ("ARCamera");
+		_ARCamera = GameObject.FindGameObjectWithTag ("ARCamera");
 
 		#if UNITY_ANDROID
-			inputMode = new InputMobile ();
+			_inputMode = new InputMobile ();
 		#else
-			inputMode = new InputComputer ();
+			_inputMode = new InputComputer ();
 		#endif
 		// Disable the MeshRenderer
 		transform.GetComponent<MeshRenderer>().enabled = false;
 
 		// Create reference to Userinterface controller
 		_userInterfaceController.AddPlayerController(this.gameObject);
+
+		// Get initial position of PlayerHand
+		PlayerHandInitialPos = PlayerHand.transform.localPosition;
 	}
 
 	// Update is called once per frame
@@ -111,18 +119,20 @@ public class PlayerController : NetworkBehaviour{
 			if (isLocalPlayer) {
 
 				// Check if initial setup is already done
-				if (!initialSetup) {
-					RecalibrateDevice(0);
+				if (!_initialSetup) {
+					//RecalibrateDevice(0);
 
 					// Create Initial Setup
 					_userInterfaceController.InitialSetup();
 
 /*****************************************************************************************************************************/
-					// Temp set User to 0,0,0
-					//transform.position = new Vector3(500,185,500);
+					if (Application.platform != RuntimePlatform.Android) {
+						// Temp set User to 0,0,0
+						transform.position = new Vector3(500,270,500);
+					}
 /*****************************************************************************************************************************/
 					// set to true
-					initialSetup = true;
+					_initialSetup = true;
 				}
 
 				// Update position and rotation
@@ -130,22 +140,34 @@ public class PlayerController : NetworkBehaviour{
 				// allow rotation by keyboard for non android runtimes
 				if (Application.platform != RuntimePlatform.Android) {
 					
-					float x = inputMode.Turn () * Time.deltaTime * 150.0f;
+					float x = _inputMode.Turn () * Time.deltaTime * 150.0f;
+					// TODO: Delete?
 					transform.Rotate (0, x, 0);
-					ARCamera.transform.rotation = transform.rotation;
+					//DeviceLocation.transform.Rotate (0, x, 0);
+					_ARCamera.transform.rotation = transform.rotation;
 /*****************************************************************************************************************************/					
 					// TEMP to be able to move
-					//float z = inputMode.Move() * Time.deltaTime * PlayerSpeed;
+					//float z = _inputMode.Move() * Time.deltaTime * PlayerSpeed;
 					//transform.Translate(0,0,z);
 /*****************************************************************************************************************************/
-				} /*else{*/
+				} //else{
 					// update ARCamera and player position from the syncVar obtained by the trackingClient from the server
 					transform.position = Position;
 				//}
-				ARCamera.transform.position = transform.Find("Hand").position;
+				//TODO: Delete?
+				//_ARCamera.transform.position = transform.Find("Hand").position;
+				//_ARCamera.transform.position = DeviceLocation.transform.position;
+				_ARCamera.transform.position = PlayerHand.transform.position;
 
 				// update rotation obtained from the gyroclient of the ARCamera
-				transform.rotation = ARCamera.transform.rotation;
+				//transform.rotation = _ARCamera.transform.rotation;
+
+				// TODO: Testing if thinking is true
+				Vector3 _ARCameraRotationEuler = _ARCamera.transform.rotation.eulerAngles;
+				PlayerHand.transform.rotation = Quaternion.Euler(_ARCameraRotationEuler.x,0,_ARCameraRotationEuler.z);
+				transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, _ARCamera.transform.rotation.eulerAngles.y,transform.rotation.eulerAngles.z);
+
+				//transform.rotation = Quaternion.Euler(0, _ARCamera.transform.rotation.eulerAngles.y,0);
 			}
 			#endregion
 		}
@@ -154,7 +176,7 @@ public class PlayerController : NetworkBehaviour{
 		// only called if server instance
 		if (isServer) {
 
-			// update position of the player object (obtained by the tracking system)
+			// update position of the player object (obtained by the tracking system from TrackedPlayer)
 			if (ControllingPlayer != null) {
 				transform.position = ControllingPlayer.transform.position;
 				Position = transform.position;
@@ -169,7 +191,8 @@ public class PlayerController : NetworkBehaviour{
 	/// </summary>
 	/// <param name="angle">Angle in degrees.</param>
 	public void RecalibrateDevice(int angle){
-		ARCamera.GetComponent<GyroController> ().Recalibrate (angle);
+		_ARCamera.GetComponent<GyroController> ().Recalibrate (angle);
+		Vibration.Vibrate (500);
 	}
 
 
@@ -195,8 +218,8 @@ public class PlayerController : NetworkBehaviour{
 		// Spawn the file on the Clients
 		NetworkServer.Spawn(sharedFile);
 
-		// Destroy the file after 10 seconds
-		Destroy(sharedFile, 10.0f);
+		// Destroy the file after 20 seconds
+		Destroy(sharedFile, 20.0f);
 	}
 
 	/// <summary>
@@ -217,10 +240,18 @@ public class PlayerController : NetworkBehaviour{
 	public void CmdPickupCollected(GameObject pickup){
 		//_localPickup = pickup;
 		Debug.Log ("Pickup Collected");
+		// Vibrate Device to give feedback that the pickup is collected
+		Vibration.Vibrate (200);
+
+		// Increase collected pickups
 		CollectedPickups++;
+
+		// Call rpc to update the players points
+		RpcUpdatePlayerPoints (CollectedPickups);
+
 		if (CollectedPickups % ShowChallengesRate == 0) {
 			string description = GameManager.GetComponent<GameController> ().CreateChallenge (gameObject);
-			RpcShowChallenge (description);
+			RpcShowChallenge (description, pickup);
 			// TODO: set pickup invisible when a challenge is currently running, maybe at rcp and not server?
 			//_localPickup.SetActive (false);
 		}
@@ -281,6 +312,8 @@ public class PlayerController : NetworkBehaviour{
 			if(_userInterfaceController.GameManager.GetComponent<GameController> ().isGameActive){
 				// Adpat all necessary panels
 				_userInterfaceController.AdaptPanels (challengeState);
+				// Set Pickup active again
+				_localPickup.SetActive (true);
 			} else {
 				// Just activate the success panel
 				_userInterfaceController.ShowSuccessPanel ();
@@ -293,13 +326,17 @@ public class PlayerController : NetworkBehaviour{
 	/// <param name="description">The Description of the challenge.</param>
 	/// </summary>
 	[ClientRpc]
-	public void RpcShowChallenge(string description){
+	public void RpcShowChallenge(string description, GameObject pickup){
 		if (isLocalPlayer) {
 			// Display the new challenge on the clients UI
 			_userInterfaceController.ShowNewChallenge (description);
 
 			// Enable the sharing mode panel which is assigned to the client
 			_userInterfaceController.TogglePlayersSharingModePanel(true);
+
+			// assign local pickup and set it to inactive
+			_localPickup = pickup;
+			_localPickup.SetActive (false);
 		}
 	}
 
@@ -352,6 +389,17 @@ public class PlayerController : NetworkBehaviour{
 		}
 	}
 
+	/// <summary>
+	/// Called to update the player points.
+	/// </summary>
+	/// <param name="CollectedPickups">Collected pickups.</param>
+	[ClientRpc]
+	public void RpcUpdatePlayerPoints (int CollectedPickups){
+		if (isLocalPlayer) {
+			_userInterfaceController.UpdatePlayerPoints (CollectedPickups);
+		}
+	}
+
 	#endregion
 
 	/// <summary>
@@ -361,12 +409,6 @@ public class PlayerController : NetworkBehaviour{
 	public void ReceiveFile(GameObject file){
 		if (isLocalPlayer) {
 			CmdVerifyReceiver(file, ConnectionId);
-
-			// TODO: not needed right?
-			// Show incoming file on the local client on the receiver only if the game is not active
-			/*if (!MyNetworkManager.Instance.isGameActive) {
-				PlayerUserInterface.GetComponent<UserInterfaceController> ().ShowIncomingFile (file);
-			}*/
 		}
 	}
 

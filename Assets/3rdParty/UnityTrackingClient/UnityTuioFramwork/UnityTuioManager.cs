@@ -23,14 +23,18 @@ namespace UnityTuio
 			[SerializeField] private bool _trackingEnabled = true;
 			[SerializeField] private int _udpPort = 3333;
 			[Tooltip("in pixel")]
-			[SerializeField] private int _targetScreenWidth = 1920;
+			//[SerializeField] private int _targetScreenWidth = 1920;
+			[SerializeField] private int _targetScreenWidth = 1488;
 			[Tooltip("in pixel")]
-			[SerializeField] private int _targetScreenHeight = 1080;
+			//[SerializeField] private int _targetScreenHeight = 1080;
+			[SerializeField] private int _targetScreenHeight = 1209;
 			[Tooltip("in centimeter")]
-			[SerializeField] private float _stageX = 1600f;
+			//[SerializeField] private float _stageX = 1600f;
+			[SerializeField] private float _stageX = 496f;
 			[Tooltip("in centimeter")]
-			[SerializeField] private float _stageY = 900f;
-			
+			//[SerializeField] private float _stageY = 900f;
+			[SerializeField] private float _stageY = 403f;
+
 			public bool TrackingEnabled
 			{
 				get { return _trackingEnabled; }

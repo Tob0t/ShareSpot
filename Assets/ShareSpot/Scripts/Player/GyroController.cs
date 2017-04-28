@@ -10,7 +10,8 @@ public class GyroController : MonoBehaviour
 {
 	#region [Private fields]
 	private bool gyroEnabled = true;
-	private const float lowPassFilterFactor = 0.2f;
+	//private const float lowPassFilterFactor = 0.2f;
+	private const float lowPassFilterFactor = 0.1f;
 
 	private readonly Quaternion baseIdentity =  Quaternion.Euler(90, 0, 0);
 	//private readonly Quaternion landscapeRight =  Quaternion.Euler(0, 0, 90);

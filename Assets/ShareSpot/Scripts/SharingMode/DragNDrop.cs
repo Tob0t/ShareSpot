@@ -7,13 +7,13 @@ using UnityEngine.EventSystems;
 // Class for controlling DragNDrop Behaviour
 /// </summary>
 
-public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
+public class DragNDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
 
 	#region [Public fields]
 	public Color MarkAvailable = Color.yellow;	///< Color to show all available dropable objects when start dragging
 	public Color MarkHover = Color.green;	///< Color to show when an object is hovered
 	public Color MarkDeselected = Color.black;	///< Color to show when dragging is finished
-	public GameObject FilteToShare; ///< Reference to the file to share
+	public GameObject FileToShare; ///< Reference to the file to share
 	public GameObject UserInterface; ///< Reference to user interface
 
 	#endregion
@@ -58,7 +58,7 @@ public class Draggable : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		// Highlight availabe Dropzones
 		//Dropzone[] zones = GameObject.FindObjectsOfType<Dropzone> ();
 
-		// Mark all droppable Objects green
+		// Mark all droppable Objects
 		foreach (GameObject dropable in GameObject.FindGameObjectsWithTag("Player")) {
 			// TODO: save original color
 			//Color current = droppable.GetComponent<MeshRenderer> ().material.color;

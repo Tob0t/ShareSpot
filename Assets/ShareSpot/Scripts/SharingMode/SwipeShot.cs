@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 
 /// <summary>
 /// Class for controlling SwipeShot behaviour.
+/// TODO: Adding FileToShare?au
 /// </summary>
 public class SwipeShot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler {
 

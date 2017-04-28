@@ -7,7 +7,8 @@ using System.Collections;
 public class TrackedPlayer : ATrackingEntity {
 
 	#region [Public fields]
-	public float PlayerHeight = 185;	///< Individually setting the height of the player
+	//public float PlayerHeight = 185*3;	///< Individually setting the height of the player
+	public float PlayerHeight = 270f;	///< Individually setting the height of the player
 
 	#endregion
 
