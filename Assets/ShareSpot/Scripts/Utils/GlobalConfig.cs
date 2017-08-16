@@ -2,19 +2,21 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GlobalHelper{
+public class GlobalConfig{
 
 
 	public static int MaxClients = 10;  ///< Maximal allowed clients to connect at the same time.
-	public static int MaxRepetitions = 10;	///< Amount of repetions in the game mode. // TODO: using or deleting?
+	public static int MaxRepetitions = 10;	///< Amount of repetions in the game mode.
+	public static int ShowChallengesRate = 2;	///< Static var for inidicating how many pickups are needed until a challenge is shown.
+	public static float ShootingSpeed = 0.1f;	///< The basic shoothing speed of a file.
 
 	/// <summary>
 	/// Defining the area of the possible location of a pickup.
 	/// </summary>
 	private static float minX = 100f;
 	private static float maxX = 1388;
-	private static float minY = 100f;
-	private static float maxY = 400f;
+	private static float minY = 200f;
+	private static float maxY = 500f;
 	private static float minZ = 100f;
 	private static float maxZ = 1100f;
 

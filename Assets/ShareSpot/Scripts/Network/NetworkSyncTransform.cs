@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 /// </summary>
 public class NetworkSyncTransform : NetworkBehaviour
 {
-	// TODO: Adjust values for minimum threshold and so on
+	// TODO: Adjust values for minimum threshold
 	[SerializeField]
 	private float _posLerpRate = 15;	///< The rate for interpolating over the position.
 	[SerializeField]
@@ -25,9 +25,11 @@ public class NetworkSyncTransform : NetworkBehaviour
 	void Update()
 	{
 		// Only interpolate if it is not the local player
-		// TODO: Maybe interpolate position also for local player?!?
-		if (isLocalPlayer)
+		// TODO: Check if interpolating for local player is worth it
+		if (isLocalPlayer) {
+			InterpolatePosition ();
 			return;
+		}
 
 		InterpolatePosition();
 		InterpolateRotation();

@@ -55,9 +55,6 @@ public class DragNDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 		// Allow that the file can act as trigger (=raycast)
 		GetComponent<CanvasGroup> ().blocksRaycasts = false;
 
-		// Highlight availabe Dropzones
-		//Dropzone[] zones = GameObject.FindObjectsOfType<Dropzone> ();
-
 		// Mark all droppable Objects
 		foreach (GameObject dropable in GameObject.FindGameObjectsWithTag("Player")) {
 			// TODO: save original color
@@ -118,7 +115,6 @@ public class DragNDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 	public void OnEndDrag(PointerEventData eventData){
 		Debug.Log ("OnEndDrag");
 
-		// TODO Think about it
 		// set parent of the object to the variable parentToReturnTo
 		this.transform.SetParent (_parentToReturnTo);
 
@@ -127,9 +123,6 @@ public class DragNDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 
 		// Block raycasts of the object again
 		GetComponent<CanvasGroup> ().blocksRaycasts = true;
-
-		// Whats is currently under me, loop through it
-		//EventSystem.current.RaycastAll (eventData);
 
 		// Remove the placeholder object
 		Destroy (_placeholder);
@@ -140,15 +133,19 @@ public class DragNDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDra
 			droppable.GetComponent<MeshRenderer> ().material.color = MarkDeselected;
 		}
 
+		// Get player controller of the current local player
+		PlayerController p = UserInterface.GetComponent<UserInterfaceController> ().PlayerObject.GetComponent <PlayerController> ();
+
 		// If the object is dropped on a valid hitObject
 		if (_hitObject != null) {
 			Debug.Log ("HitObject " + _hitObject);
 			// TODO: GameObject must have a network identity to be able to work with it
 			// Call Command on the local Player
-			PlayerController p = UserInterface.GetComponent<UserInterfaceController> ().PlayerObject.GetComponent <PlayerController> ();
-			p.CmdReceiveFile (this.gameObject, p.ConnectionId ,_hitObject.GetComponent<PlayerController> ().ConnectionId);
+			p.CmdReceiveFile (this.gameObject, p.ConnectionId, _hitObject.GetComponent<PlayerController> ().ConnectionId);
 			// remove gameobject
 			//gameObject.SetActive (false);
+		} else { // if the object is dropped on empty space
+			p.CmdIncreaseError(p.ConnectionId);
 		}
 	}
 	

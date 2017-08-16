@@ -7,7 +7,6 @@ using UnityEngine.Networking;
 /// </summary>
 public class PickupController : NetworkBehaviour {
 
-	public GameObject AssociatedNetworkPlayer;	///< TODO: not needed?	The networkplayer who is collecting the pickup.
 	[SyncVar]
 	public Color ChosenColor;	///< The color of the pickup.
 	[SyncVar]
@@ -22,13 +21,8 @@ public class PickupController : NetworkBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		//if(AssociatedNetworkPlayer
-		//if (AssociatedNetworkPlayer.GetComponent<NetworkPlayer> ().Equals (Network.player)) {
-			// Rotate pickup every frame
-			transform.Rotate (new Vector3 (15, 30, 45) * Time.deltaTime);
-		/*} else {
-			gameObject.SetActive (false);
-		}*/
+		// Rotate pickup every frame
+		transform.Rotate (new Vector3 (15, 30, 45) * Time.deltaTime);
 	}
 
 	/// <summary>

@@ -31,7 +31,7 @@ public class MarkerFound : MonoBehaviour, ITrackableEventHandler {
 		Vuforia.TrackableBehaviour.Status previousStatus,
 		Vuforia.TrackableBehaviour.Status newStatus){
 
-		Handheld.Vibrate ();
+		//Handheld.Vibrate ();
 
 		if (newStatus == TrackableBehaviour.Status.DETECTED ||
 			newStatus == TrackableBehaviour.Status.TRACKED ||
@@ -55,6 +55,6 @@ public class MarkerFound : MonoBehaviour, ITrackableEventHandler {
 	private void OnTrackingLost(){
 		//Input.gyro.enabled = true;
 		//Camera.main.transform.rotation = mCurrentRotation;
-		Camera.main.GetComponent<GyroController> ().AttachGyro ();
+		//Camera.main.GetComponent<GyroController> ().AttachGyro ();
 	}
 }

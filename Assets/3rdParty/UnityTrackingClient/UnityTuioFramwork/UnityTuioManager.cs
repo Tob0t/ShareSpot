@@ -23,10 +23,10 @@ namespace UnityTuio
 			[SerializeField] private bool _trackingEnabled = true;
 			[SerializeField] private int _udpPort = 3333;
 			[Tooltip("in pixel")]
-			//[SerializeField] private int _targetScreenWidth = 1920;
+			//[SerializeField] private int _targetScreenWidth = 1280;
 			[SerializeField] private int _targetScreenWidth = 1488;
 			[Tooltip("in pixel")]
-			//[SerializeField] private int _targetScreenHeight = 1080;
+			//[SerializeField] private int _targetScreenHeight = 720;
 			[SerializeField] private int _targetScreenHeight = 1209;
 			[Tooltip("in centimeter")]
 			//[SerializeField] private float _stageX = 1600f;
@@ -284,7 +284,9 @@ namespace UnityTuio
 				yield break;
 			}
 
-			Screen.SetResolution(m_tuioSettings.TargetScreenWidth, m_tuioSettings.TargetScreenHeight, true);
+			// Disable since pre-setting own resolution
+			//Screen.SetResolution(m_tuioSettings.TargetScreenWidth, m_tuioSettings.TargetScreenHeight, true);
+			Screen.SetResolution(1280, 720, false);
 
 			m_listener = new UnityTuioListener(m_tuioSettings.UDP_Port);
 			m_eventProcessor = new UnityTuioEventProcessor(m_listener);

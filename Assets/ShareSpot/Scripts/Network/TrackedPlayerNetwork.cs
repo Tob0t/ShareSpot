@@ -49,6 +49,7 @@ public class TrackedPlayerNetwork : NetworkBehaviour {
 	void OnMouseDown(){
 		if (isServer) {
 			Admin.Instance.CurrentTrackedPlayer = gameObject;
+			Admin.Instance.CurrentTrackedPlayerText.text = "Not assigned client";
 		}
 		StartCoroutine ("SelectPlayer");
 	}

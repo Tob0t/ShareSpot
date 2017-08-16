@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 using System.IO;
+using System;
 
 /// <summary>
 /// GameController is responsible for managing the Gameplay and mainly executed on the Server.
@@ -18,10 +19,13 @@ public class GameController : NetworkBehaviour {
 	public Challenge[] currentChallenges;	///< Array of the current challenges of all players.
 
 	public GameObject ButtonStartGame;	///< Button to start the game.
+	public GameObject ButtonStopGame;	///< Button to stop the game.
 	public GameObject ButtonSaveData;	///< Button to persist the data to local storage.
 	public GameObject ButtonDragNDrop;	///< Button for the sharing mode DragNDrop.
 	public GameObject ButtonSwipeShot;	///< Button for the sharing mode SwipeShot.
 	public GameObject ButtonTouchNChuck;	///< Button for the sharing mode TouchNChuck.
+
+	public Text GameScoreText; ///< Textbox for the current score
 
 	public Text DebugGame; ///< Textbox for debugging the actions during the game.
 	#endregion
@@ -41,8 +45,8 @@ public class GameController : NetworkBehaviour {
 
 		// init the arrays
 		//currentChallenges = new Challenge[Admin.Instance.MaxClients+1];
-		currentChallenges = new Challenge[GlobalHelper.MaxClients+1];
-		_allChallenges = new List<Challenge>[GlobalHelper.MaxClients+1];
+		currentChallenges = new Challenge[GlobalConfig.MaxClients+1];
+		_allChallenges = new List<Challenge>[GlobalConfig.MaxClients+1];
 	}
 	
 	// Update is called once per frame
@@ -91,6 +95,8 @@ public class GameController : NetworkBehaviour {
 		Admin.Instance.CurrentTrackedPlayer.GetComponent<PlayerController> ().SharingMode = sharingMode;
 		DebugGame.text += "Assigned SharingMode " + (SharingMode) sharingMode + " to " + Admin.Instance.CurrentTrackedPlayer.GetComponent<PlayerController> ().PlayerName +"\n";
 
+		Admin.Instance.CurrentTrackedPlayer.GetComponent<PlayerController> ().RpcAssignGameSharingMode (sharingMode);
+
 		// Remove Reference
 		Admin.Instance.CurrentTrackedPlayer = null;
 	}
@@ -102,6 +108,11 @@ public class GameController : NetworkBehaviour {
 		// Debugging on the server
 		DebugGame.text += "Start Game\n";
 		DebugGame.text += "Connected Players: "+MyNetworkManager.Instance.numPlayers +"\n";
+
+		// Swap Game Buttons
+		ButtonStartGame.SetActive (false);
+		ButtonStopGame.SetActive(true);
+		ButtonSaveData.SetActive(true);
 
 		// Set the game state to true
 		isGameActive = true;
@@ -115,19 +126,19 @@ public class GameController : NetworkBehaviour {
 		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
 			if (connectedClient != null) {
 				// Get valid area for finding random location
-				Vector3 randomLocation = new Vector3 (Random.Range (GlobalHelper.GetPickupAreaMinValues().x, GlobalHelper.GetPickupAreaMaxValues().x), Random.Range (GlobalHelper.GetPickupAreaMinValues().y, GlobalHelper.GetPickupAreaMaxValues().y), Random.Range (GlobalHelper.GetPickupAreaMinValues().z, GlobalHelper.GetPickupAreaMaxValues().z));
+				Vector3 randomLocation = new Vector3 (UnityEngine.Random.Range (GlobalConfig.GetPickupAreaMinValues().x, GlobalConfig.GetPickupAreaMaxValues().x), UnityEngine.Random.Range (GlobalConfig.GetPickupAreaMinValues().y, GlobalConfig.GetPickupAreaMaxValues().y), UnityEngine.Random.Range (GlobalConfig.GetPickupAreaMinValues().z, GlobalConfig.GetPickupAreaMaxValues().z));
 				// Create the pickup from the file Prefab
 				GameObject pickup = (GameObject)Instantiate (PickupPrefab, randomLocation, Quaternion.identity);
 				// Add the color of the pickup to the Controller
-				pickup.GetComponent<PickupController> ().ChosenColor = GlobalHelper.GetColorForPlayerId (i);
+				pickup.GetComponent<PickupController> ().ChosenColor = GlobalConfig.GetColorForPlayerId (i);
 				// Set who is allowed to see the Pickup
 				pickup.GetComponent<PickupController>().ValidForConnectionId = i;
 				// Spawn the file on the Clients
 				NetworkServer.Spawn (pickup);
 
 				// Set the color of the admin panel according to the players pickup color
-				Admin.Instance.ClientButtons[i].GetComponent<Image>().color = GlobalHelper.GetColorForPlayerId (i);
-				connectedClient.GetComponent<MeshRenderer> ().material.color = GlobalHelper.GetColorForPlayerId (i);
+				Admin.Instance.ClientButtons[i].GetComponent<Image>().color = GlobalConfig.GetColorForPlayerId (i);
+				connectedClient.GetComponent<MeshRenderer> ().material.color = GlobalConfig.GetColorForPlayerId (i);
 			}
 			i++;
 		}
@@ -136,9 +147,55 @@ public class GameController : NetworkBehaviour {
 		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
 			if (connectedClient != null) {
 				connectedClient.GetComponent<PlayerController>().RpcStartGame ();
-
 			}
 		}
+	}
+
+	/// <summary>
+	/// Stops the game.
+	/// </summary>
+	public void StopGame(){
+		// Debugging on the server
+		DebugGame.text += "Stop Game\n";
+
+		// Delete Scores
+		GameScoreText.text = "";
+
+		// Persist data
+		SaveData ();
+
+		// Swap Game Buttons
+		ButtonStopGame.SetActive(false);
+		ButtonSaveData.SetActive(false);
+		ButtonStartGame.SetActive (true);
+
+		// Set the game state to false
+		isGameActive = false;
+
+		// Destroy all pickups
+		foreach (GameObject pickup  in GameObject.FindGameObjectsWithTag("Pickup")) {
+			NetworkServer.Destroy (pickup);
+		}
+
+		// Empty arrays
+		Array.Clear (_allChallenges, 0, _allChallenges.Length);
+		Array.Clear (currentChallenges, 0, currentChallenges.Length);
+
+		// Stop the game on each client
+		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
+			if (connectedClient != null) {
+				connectedClient.GetComponent<PlayerController>().RpcStopGame ();
+				// Reset the collected pickups
+				connectedClient.GetComponent<PlayerController> ().CollectedPickups = 0;
+
+				// Reset the color of the buttons to white and the players to black
+				int connectionId = connectedClient.GetComponent<PlayerController> ().ConnectionId;
+				Admin.Instance.ClientButtons [connectionId].GetComponent<Image> ().color = Color.white;
+				Admin.Instance.ConnectedClients[connectionId].GetComponent<MeshRenderer> ().material.color = Color.black;
+			}
+		}
+
+
 	}
 
 
@@ -157,7 +214,7 @@ public class GameController : NetworkBehaviour {
 		if (MyNetworkManager.Instance.numPlayers > 1) {
 			// Assign random Id to share challenge to
 			do {
-				sharingToPlayerId = Random.Range (1, MyNetworkManager.Instance.numPlayers + 1);	
+				sharingToPlayerId = UnityEngine.Random.Range (1, MyNetworkManager.Instance.numPlayers + 1);	
 			} while (sharingToPlayerId == currentId);
 		}
 
@@ -197,6 +254,23 @@ public class GameController : NetworkBehaviour {
 	}
 
 	/// <summary>
+	/// Increases the error rate.
+	/// </summary>
+	/// <param name="senderId">The player id of the sender.</param>
+	public void IncreaseErrorRate(int senderId){
+		// Check if a game is currently running
+		if (isGameActive) {
+			// Get Challenge from the stored ones
+			Challenge c = currentChallenges [senderId];
+
+			// Increase the error rate
+			Debug.Log ("Miss! Increasing Error rate!");
+			DebugGame.text += "Miss! Increasing Error rate! \n";
+			c.IncreaseError ();
+		}
+	}
+
+	/// <summary>
 	/// Persist the data of all challenges on the local file system.
 	/// </summary>
 	public void SaveData(){
@@ -204,7 +278,7 @@ public class GameController : NetworkBehaviour {
 		// Get data path
 		string currentDataPath = Application.persistentDataPath +"/Challenges_"+System.DateTime.Now.ToString("yyyyMMdd_HHmmss")+".json";
 		Debug.Log ("Saving file to " + currentDataPath);
-		DebugGame.text = "Saving file to " + currentDataPath;
+		DebugGame.text += "Saving file to " + currentDataPath +"\n";
 
 		// Write data from the allChallenges List to file
 		FileStream file = File.Create (currentDataPath);
@@ -215,5 +289,55 @@ public class GameController : NetworkBehaviour {
 
 		// Close file
 		file.Close ();
+	}
+
+	/// <summary>
+	/// Updates the game scores in the panel and stops it if the threshold is reached.
+	/// </summary>
+	public bool UpdateGameScores(){
+		int finishedGame = 0;
+		GameScoreText.text = "";
+		// Read game scores of each client
+		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
+			if (connectedClient != null) {
+				GameScoreText.text += connectedClient.GetComponent<PlayerController> ().PlayerName.Substring(0,1).ToUpper() + ": ";
+				GameScoreText.text += connectedClient.GetComponent<PlayerController> ().CollectedPickups +" ";
+				if (connectedClient.GetComponent<PlayerController> ().CollectedPickups > (GlobalConfig.MaxRepetitions * GlobalConfig.ShowChallengesRate)) {
+					finishedGame++;
+				}
+			}
+		}
+		// check if all players already finished the game
+		if (finishedGame == MyNetworkManager.Instance.numPlayers) {
+		//if (finishedGame > 0) {
+			StopGame ();
+			return false;
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// Tests displaying in challenge.
+	/// </summary>
+	public void TestChallenge(){
+		GameObject currentTrackedPlayer = Admin.Instance.CurrentTrackedPlayer;
+		if (currentTrackedPlayer != null) {
+			string description = CreateChallenge (currentTrackedPlayer);
+			currentTrackedPlayer.GetComponent<PlayerController>().RpcShowChallenge (description, new GameObject());
+		} else {
+			Debug.Log ("No player currently selected!");
+		}
+	}
+
+	/// <summary>
+	/// Starts the game for a specific player, in case of disconnections problem.
+	/// </summary>
+	public void StartGameForSpecificPlayer(){
+		GameObject currentTrackedPlayer = Admin.Instance.CurrentTrackedPlayer;
+		if (currentTrackedPlayer != null) {
+			currentTrackedPlayer.GetComponent<PlayerController> ().RpcStartGame ();
+		} else {
+				Debug.Log ("No player currently selected!");
+			}
 	}
 }

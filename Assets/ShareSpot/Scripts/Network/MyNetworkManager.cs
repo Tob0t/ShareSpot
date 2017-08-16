@@ -12,8 +12,6 @@ public class MyNetworkManager : NetworkManager {
 	public static MyNetworkManager Instance = null;	///< static instance of MyNetworkManager which allows it to be accessed by any other script.
 	public string ConnectionIP; ///< The IP-Address to connect to.
 	public int ConnectionPort = 7777; ///< The Port to connect to (Standard is 7777).
-	// TODO not needed right?
-	//public bool ClientConnected = false; ///< Determine if a client is already connected (Standard is false).
 	public bool IsServer;	///< Determine if the caller is a Server.
 	public bool IsClient; ///< Determine if the caller is a Client.
 	public Text DebugTextClient; ///< Debugging the actions of the client.
@@ -28,10 +26,8 @@ public class MyNetworkManager : NetworkManager {
 	/// Gameobjects for Userinterfaces Server
 	public GameObject ButtonStartServer; ///< Button to start the server.
 	public GameObject ButtonStopServer; ///< Button to stop the server.
-	public GameObject GamePanel; ///< GamePanel for controlling a Game.
-
-	//TODO: not needed right?
-	//public bool isGameActive = false;
+	public GameObject GameControlPanel; ///< GamePanel for controlling a Game.
+	public GameObject GameDebugPanel; ///< GamePanel for debugging a Game.
 
 	#endregion
 
@@ -60,6 +56,8 @@ public class MyNetworkManager : NetworkManager {
 	public void StartServerHosting()
 	{
 		StartServer();
+		GameControlPanel.SetActive (true);
+		GameDebugPanel.SetActive (true);
 		IsServer = true;
 		ButtonStartServer.SetActive (false);
 		ButtonStopServer.SetActive (true);
@@ -72,7 +70,7 @@ public class MyNetworkManager : NetworkManager {
 	public void StopServerHosting()
 	{
 		StopServer();
-		GamePanel.SetActive (false);
+		GameControlPanel.SetActive (false);
 		ButtonStopServer.SetActive (false);
 		ButtonStartServer.SetActive (true);
 		NetworkServer.Reset();
@@ -95,7 +93,13 @@ public class MyNetworkManager : NetworkManager {
 		base.OnStopServer();
 		// Cleanup and delete all clients
 		foreach (GameObject connectedClient in Admin.Instance.ConnectedClients) {
+			// show template of a tracked player if the client is not connected anymore
+			if (connectedClient != null && connectedClient.GetComponent<PlayerController> ().ControllingPlayer != null) {
+				connectedClient.GetComponent<PlayerController> ().ControllingPlayer.GetComponent<TrackedPlayerNetwork> ().HasPlayer = false;
+			}
+			// destroy connected client
 			NetworkServer.Destroy (connectedClient);
+
 		}
 		// Cleanup and delete all pickups
 		foreach (GameObject pickup in GameObject.FindGameObjectsWithTag("Pickup")){
@@ -111,12 +115,10 @@ public class MyNetworkManager : NetworkManager {
 	public override void OnServerConnect(NetworkConnection conn)
 	{
 		base.OnServerConnect(conn);
-		// TODO: is it necessary here?
 		// only add the connected client and button if there are not more than @param MaxClients
-		if (conn.connectionId <= GlobalHelper.MaxClients) {
+		if (conn.connectionId <= GlobalConfig.MaxClients) {
 			Admin.Instance.AddClientButton(conn.connectionId);
 		}
-		//toggleClientPanel (conn, true);
 		DebugTextClient.text += "Client " + conn.connectionId + " connected.\n";
 
 	}
@@ -127,7 +129,6 @@ public class MyNetworkManager : NetworkManager {
 	/// <param name="conn">Connection id of the client.</param>
 	public override void OnServerDisconnect(NetworkConnection conn)
 	{
-		
 		// show the template of a tracked player if the client is not connected anymore
 		if (Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().HasControllingPlayer) {
 			Admin.Instance.ConnectedClients [conn.connectionId].GetComponent<PlayerController> ().ControllingPlayer.GetComponent<TrackedPlayerNetwork>().HasPlayer = false;
@@ -211,8 +212,6 @@ public class MyNetworkManager : NetworkManager {
 		UI_Wait.SetActive (false);
 		UI_Panel.SetActive (true);
 		UI_Setup.SetActive (true);
-		// TODO Is not necessary right?
-		//userInterfaceController.PlayerObject = null;
 		base.OnStopClient ();
 	}
 

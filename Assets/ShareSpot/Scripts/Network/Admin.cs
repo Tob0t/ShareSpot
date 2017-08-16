@@ -14,9 +14,10 @@ public class Admin : AManager<Admin> {
 	public Button[] ClientButtons; ///< Array for the buttons for all connected Clients.
 	public GameObject[] ConnectedClients; ///< Array for all connected Clients.
 	public GameObject ClientButtonPrefab; ///< Prefab of a Client Button for programmatically instantiation.
-	public GameObject GamePanel; ///< GamePanel for controlling a Game.
+	public GameObject GameManger; ///< GameManager for controlling a Game.
 
 	public InputField NewNameTextBox;	///< TextBox for the new name.
+	public Text CurrentTrackedPlayerText; ///< Text displaying the current tracked player.
 
 	#endregion
 
@@ -25,8 +26,8 @@ public class Admin : AManager<Admin> {
 	/// Preparing Arrays.
 	/// </summary>
 	public void Start(){
-		ClientButtons = new Button[GlobalHelper.MaxClients+1];
-		ConnectedClients = new GameObject[GlobalHelper.MaxClients+1];
+		ClientButtons = new Button[GlobalConfig.MaxClients+1];
+		ConnectedClients = new GameObject[GlobalConfig.MaxClients+1];
 	}
 
 	/// <summary>
@@ -38,6 +39,12 @@ public class Admin : AManager<Admin> {
 	{
 		if (CurrentTrackedPlayer != null)
 		{
+			// Enable the old tracked player and mark it available
+			if (ConnectedClients [connectionId].GetComponent<PlayerController> ().HasControllingPlayer && ConnectedClients [connectionId].GetComponent<PlayerController> ().ControllingPlayer != null) {
+				GameObject previousControllingPlayer = ConnectedClients [connectionId].GetComponent<PlayerController> ().ControllingPlayer;
+				previousControllingPlayer.GetComponent<TrackedPlayerNetwork>().HasPlayer = false;
+			}
+
 			// Assign the connected client the current tracked player
 			ConnectedClients[connectionId].GetComponent<PlayerController>().ControllingPlayer = CurrentTrackedPlayer;
 			ConnectedClients[connectionId].GetComponent<PlayerController>().HasControllingPlayer = true;
@@ -47,14 +54,16 @@ public class Admin : AManager<Admin> {
 			CurrentTrackedPlayer.GetComponent<TrackedPlayerNetwork>().HasPlayer = true;
 
 			// Format the newly connected player
-			//ButtonClientOne.interactable = false;
 			ConnectedClients[connectionId].GetComponent<MeshRenderer>().material.color = Color.black;
-			// TODO: Not Needed Right?
-			//ConnectedClients[connectionId].GetComponent<PlayerController> ().PlayerName = "Client "+connectionId;
-			//ConnectedClients[connectionId].GetComponent<PlayerController> ().ConnectionId = connectionId;
 
-			// Show GamePanel (if its not already shown)
-			GamePanel.SetActive(true);
+			// Write the name of the current tracked player in the admin panel
+			Admin.Instance.CurrentTrackedPlayerText.text = ConnectedClients [connectionId].GetComponent<PlayerController> ().PlayerName;
+
+			// If the game is active, assign the right color as well
+			if (GameManger.GetComponent<GameController> ().isGameActive) {
+				ClientButtons[connectionId].GetComponent<Image>().color = GlobalConfig.GetColorForPlayerId (connectionId);
+				ConnectedClients[connectionId].GetComponent<MeshRenderer> ().material.color = GlobalConfig.GetColorForPlayerId (connectionId);
+			}
 		}
 
 	}

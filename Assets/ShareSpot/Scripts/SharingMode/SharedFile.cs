@@ -19,11 +19,20 @@ public class SharedFile : NetworkBehaviour {
 	/// <param name="collision">Collision componente of the other game object.</param>
 	void OnCollisionEnter(Collision collision)
     {
+		//Debug.Log ("Collision detected with "+collision.gameObject.ToString());
         var hit = collision.gameObject;
 		if (hit.CompareTag ("Player")) {
-			hit.GetComponent<PlayerController> ().ReceiveFile (this.gameObject);
-			gameObject.SetActive (false);
+			// Only work if the file is not hit with the sender
+			if (hit.GetComponent<PlayerController> ().ConnectionId != SourceId) {
+				hit.GetComponent<PlayerController> ().ReceiveFile (this.gameObject);
+				gameObject.SetActive (false);
+			}
 		} else {
+			// Increasing error rate if the hit is a miss (on server).
+			if (isServer) {
+				Admin.Instance.GameManger.GetComponent<GameController> ().IncreaseErrorRate (SourceId);
+			}
+			// Destroy the game object
 			Destroy (gameObject);
 		}
     }

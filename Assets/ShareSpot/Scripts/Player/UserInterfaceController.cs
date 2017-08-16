@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class UserInterfaceController : MonoBehaviour {
 
 	#region [Public fields]
-	public GameObject PlayerObject;	///< Associated PlayerObject which gets the instructions.
+	public GameObject PlayerObject = null;	///< Associated PlayerObject which gets the instructions.
 	public GameObject UI_StartupPanel;	///< Startup Userinterfaces.
 	public GameObject UI_Wait;	///< Wait Userinterface.
 	public GameObject UI_SharingModePanel;	///< SharingMode Userinterface.
@@ -22,12 +22,15 @@ public class UserInterfaceController : MonoBehaviour {
 	public GameObject UI_VerifyReceiverPanel;	///< Verify Receiver Userinterface.
 	public GameObject UI_FileIncomingPanel;	///< Incoming File Userinterface.
 	public GameObject UI_GamePanel;	///< Game Userinterface.
+	public GameObject UI_GameSharingMode;	///< GameMode Userinterface.
 	public GameObject UI_GameStartPanel;	///< GameStart Userinterface.
+	public GameObject UI_GameStopPanel;	///< GameStop Userinterface.
 	public GameObject UI_GamePointsPanel;	///< GamePoints Userinterface.
 	public GameObject UI_ErrorPanel;	///< Error Userinterface.
 	public GameObject UI_SuccessPanel;	///< Success Userinterface.
 	public GUISkin CustomGuiSkin;	///< Custom Skin for designing the Buttons.
 	public string PlayerName;	///< The name of the associated player.
+	public Text GameSharingModeDescription;	///< Text for the description of the assigned game mode.
 	public Text ChallengeDescription;	///< Text for the description of a new challenge.
 	public Text VerifyReceiverDescription; ///< Text for verifying the receiver.
 	public Text CurrentDevicePosition; ///< Current Position of the device
@@ -35,14 +38,17 @@ public class UserInterfaceController : MonoBehaviour {
 
 	public GameObject IncomingFile; ///< GameObject of any incoming file.
 
-
 	public GameObject GameManager;	///< Reference to the GameManger.
+
+	public bool TouchNChuckEnabled = false; ///< Mutex to indicate that TouchNChuck is currently available.
 
 	#endregion
 
 	#region [Private fields]
 	private GameObject _sendingFile; ///< GameObject of any outcoming file.
 	private int _fileReceiverId; ///< The id of the receiver of the sending file.
+
+
 
 	#endregion
 
@@ -88,7 +94,7 @@ public class UserInterfaceController : MonoBehaviour {
 
 		// Enable Calibration and Device Toggle Button
 		UI_CalibrationTogglePanel.SetActive (true);
-		UI_AdjustDevicePositionTogglePanel.SetActive (true);
+		//UI_AdjustDevicePositionTogglePanel.SetActive (true);
 	}
 
 	/// <summary>
@@ -113,6 +119,7 @@ public class UserInterfaceController : MonoBehaviour {
 	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
 	public void ToggleDevicePositionPanel(bool newValue){
 		UI_AdjustDevicePositionPanel.SetActive (newValue);
+		showCurrentPosition ();
 	}
 
 	/// <summary>
@@ -137,6 +144,8 @@ public class UserInterfaceController : MonoBehaviour {
 	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
 	public void ToggleTouchNChuckPanel(bool newValue){
 		UI_TouchNChuckPanel.SetActive(newValue);
+		//UI_TouchNChuckPanel.GetComponent<TouchNChuck> ().enabled = newValue;
+		TouchNChuckEnabled = newValue;
 	}
 
 	/// <summary>
@@ -189,17 +198,17 @@ public class UserInterfaceController : MonoBehaviour {
 	public void TogglePlayersSharingModePanel(bool newValue){
 		SharingMode sharingMode = (SharingMode) PlayerObject.GetComponent<PlayerController> ().SharingMode;
 		switch (sharingMode) {
-		case SharingMode.DragNDrop:
-			ToggleDragNDropPanel (newValue);
-			break;
-		case SharingMode.SwipeShot:
-			ToggleSwipeShotPanel (newValue);
-			break;
-		case SharingMode.TouchNChuck:
-			ToggleTouchNChuckPanel (newValue);
-			break;
-		default:
-			break;
+			case SharingMode.DragNDrop:
+				ToggleDragNDropPanel (newValue);
+				break;
+			case SharingMode.SwipeShot:
+				ToggleSwipeShotPanel (newValue);
+				break;
+			case SharingMode.TouchNChuck:
+				ToggleTouchNChuckPanel (newValue);
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -257,14 +266,16 @@ public class UserInterfaceController : MonoBehaviour {
 	/// Shows the current position of the players device relative to the player.
 	/// </summary>
 	private void showCurrentPosition(){
-		// scaleVector needed for calculations to cm (half of the maximum)
-		Vector3 scaleVector = new Vector3 (0, 90, 20);
+		if(PlayerObject != null){
+			// scaleVector needed for calculations to cm (half of the maximum)
+			Vector3 scaleVector = new Vector3 (0, 90, 20);
 
-		// Calculate local position in cm
-		Vector3 localPositionInCm = Vector3.Scale(PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.localPosition, scaleVector) + scaleVector;
+			// Calculate local position in cm
+			Vector3 localPositionInCm = Vector3.Scale(PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.localPosition, scaleVector) + scaleVector;
 
-		CurrentDevicePosition.text = "Current pos " + localPositionInCm.ToString();
-		//CurrentDevicePosition.text += "Abs pos " +  PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.position.ToString();
+			CurrentDevicePosition.text = "Current pos " + localPositionInCm.ToString();
+			//CurrentDevicePosition.text += "Abs pos " +  PlayerObject.GetComponent<PlayerController> ().PlayerHand.transform.position.ToString();
+		}
 	}
 	#endregion
 
@@ -277,13 +288,29 @@ public class UserInterfaceController : MonoBehaviour {
 	}
 
 	/// <summary>
-	/// Toggles the game start panel.
+	/// Shows the game sharing mode panel.
 	/// </summary>
-	/// <param name="newValue">Indicates whether it should be activated or deactivated.</param>
+	public void ShowGameSharingMode(int sharingMode){
+		GameSharingModeDescription.text = (SharingMode) sharingMode + " has been assigned to you!";
+		UI_GameSharingMode.SetActive (true);
+		StartCoroutine(DisableAfterSomeTime(2f));
+	}
+
+	/// <summary>
+	/// Shows the game start panel.
+	/// </summary>
 	public void ShowGameStartPanel(){
 		UI_GameStartPanel.SetActive (true);
 		// Show Points panel
 		ToggleGamePointsPanel(true);
+		StartCoroutine(DisableAfterSomeTime(2f));
+	}
+
+	/// <summary>
+	/// Shows the game stop panel.
+	/// </summary>
+	public void ShowGameStopPanel(){
+		UI_GameStopPanel.SetActive (true);
 		StartCoroutine(DisableAfterSomeTime(2f));
 	}
 
@@ -347,9 +374,15 @@ public class UserInterfaceController : MonoBehaviour {
 	IEnumerator DisableAfterSomeTime(float seconds)
 	{
 		yield return new WaitForSeconds(seconds);
+		UI_GameSharingMode.SetActive (false);
+		UI_GameStartPanel.SetActive (false);
 		UI_ErrorPanel.SetActive (false);
 		UI_SuccessPanel.SetActive (false);
-		UI_GameStartPanel.SetActive (false);
+		UI_GameStopPanel.SetActive (false);
+
+		// Enable TouchNChuck
+		TouchNChuckEnabled = true;
+
 	}
 
 	/// <summary>
@@ -358,28 +391,6 @@ public class UserInterfaceController : MonoBehaviour {
 	/// <param name="CollectedPickups">Amount of collected pickups.</param>
 	public void UpdatePlayerPoints (int CollectedPickups){
 		PlayerPoints.text = CollectedPickups.ToString();
-	}
-
-	/// <summary>
-	/// Raises the GUI event.
-	/// </summary>
-	void OnGUI(){
-		// only call the GUI if it there is a PlayerObject already existing
-		if (PlayerObject == null) {
-			return;
-		}
-
-		GUI.skin = CustomGuiSkin;
-
-		// TODO: Create Panel on UI
-		// Only if there is no Mode selected show the UI for changing the name
-		if (!UI_DragNDropPanel.activeSelf && !UI_SwipeShotPanel.activeSelf && !UI_TouchNChuckPanel.activeSelf) {
-			/*PlayerName = GUI.TextField (new Rect (Screen.width - 425, Screen.height - 250, 400, 200), PlayerName);
-
-			if (GUI.Button (new Rect (Screen.width - 750, Screen.height - 250, 300, 200), "Change")) {
-				PlayerObject.GetComponent<PlayerController> ().CmdChangeName (PlayerName);
-			}*/
-		}
 	}
 
 	/// <summary>
@@ -397,7 +408,10 @@ public class UserInterfaceController : MonoBehaviour {
 	/// </summary>
 	/// <param name="force">Force as 3D-Vector.</param>
 	public void SwipeShot (Vector3 force){
-		PlayerObject.GetComponent<PlayerController> ().CmdShootFile (force);	
+		// Send the new rotation of the device to the server
+		PlayerObject.GetComponent<PlayerController>().CmdSetDeviceRotation(PlayerObject.GetComponent<PlayerController>().DeviceLocation.transform.rotation);
+		// Perform file shot
+		PlayerObject.GetComponent<PlayerController> ().CmdShootFile (force);
 	}
 
 	/// <summary>
